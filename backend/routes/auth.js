@@ -32,4 +32,33 @@ router.post('/login', async (req, res, next) => {
   }
 });
 
+// POST /auth/register
+// body: { username, email, faculty, password }
+router.post('/register', async (req, res, next) => {
+  try {
+    const { username, email, faculty, password } = req.body || {};
+    if (!username || !email || !faculty || !password) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // check if email already exists
+    const existing = await db.query('SELECT id FROM is463backend.user WHERE email = ? LIMIT 1', [email]);
+    if (existing && existing.length > 0) {
+      return res.status(409).json({ error: 'Email already registered' });
+    }
+
+    // Note: passwords are stored in plaintext in this project for now.
+    // For production, hash passwords with bcrypt before storing.
+    const result = await db.query('INSERT INTO is463backend.user (username, email, faculty, password) VALUES (?, ?, ?, ?)', [username, email, faculty, password]);
+
+    // result.insertId contains the new user id
+    const newUserRows = await db.query('SELECT id, username, email, faculty FROM is463backend.user WHERE id = ? LIMIT 1', [result.insertId]);
+    const newUser = newUserRows[0];
+    res.status(201).json({ user: newUser });
+  } catch (err) {
+    console.error('Error in /auth/register', err.message);
+    next(err);
+  }
+});
+
 module.exports = router;
