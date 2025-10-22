@@ -1,0 +1,35 @@
+const express = require('express');
+const router = express.Router();
+const db = require('../db');
+
+// POST /auth/login
+// body: { email, password }
+router.post('/login', async (req, res, next) => {
+  try {
+    const { email, password } = req.body || {};
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Missing email or password' });
+    }
+
+    const rows = await db.query('SELECT id, username, email, faculty, password FROM is463backend.user WHERE email = ? LIMIT 1', [email]);
+    if (!rows || rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const user = rows[0];
+
+    
+    if (user.password !== password) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Return user info without password
+    const { password: _pw, ...safeUser } = user;
+    res.json({ user: safeUser });
+  } catch (err) {
+    console.error('Error in /auth/login', err.message);
+    next(err);
+  }
+});
+
+module.exports = router;

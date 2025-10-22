@@ -17,10 +17,16 @@ app.use(cors(corsOptions));
 const digestor = require('./services/digestor');
 const stall = require('./services/stall');
 const user = require('./services/user');
+const authRouter = require('./routes/auth');
 
 app.get('/', (req, res) => {
 	res.send('Hello World')
 })
+
+// auth routes
+app.use('/auth', authRouter);
+
+
 
 // digestor
 
