@@ -1,10 +1,8 @@
-CREATE DATABASE  IF NOT EXISTS `is463backend` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `is463backend`;
--- MySQL dump 10.13  Distrib 8.0.36, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.44, for Win64 (x86_64)
 --
 -- Host: localhost    Database: is463backend
 -- ------------------------------------------------------
--- Server version	8.0.37
+-- Server version	9.1.0
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -27,6 +25,7 @@ DROP TABLE IF EXISTS `digestor`;
 CREATE TABLE `digestor` (
   `id` int NOT NULL AUTO_INCREMENT,
   `stallid` int NOT NULL,
+  `weight` decimal(2,1) NOT NULL,
   `date_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `digestor_stall_fk_idx` (`stallid`),
@@ -40,7 +39,7 @@ CREATE TABLE `digestor` (
 
 LOCK TABLES `digestor` WRITE;
 /*!40000 ALTER TABLE `digestor` DISABLE KEYS */;
-INSERT INTO `digestor` VALUES (1,1,'2025-10-22 00:16:20'),(2,1,'2025-10-22 00:16:20'),(3,1,'2025-10-22 00:16:20'),(4,2,'2025-10-22 00:16:20'),(6,1,'2025-10-22 00:16:20'),(7,1,'2025-10-22 01:24:51'),(8,1,'2025-10-22 01:27:34');
+INSERT INTO `digestor` VALUES (1,1,1.0,'2025-10-17 00:16:20'),(2,1,1.0,'2025-10-18 00:16:20'),(3,1,1.0,'2025-10-19 00:16:20'),(4,2,4.0,'2025-10-20 00:16:20'),(6,1,1.0,'2025-10-21 00:16:20'),(7,1,1.0,'2025-10-22 01:24:51'),(8,1,1.0,'2025-10-23 01:27:34');
 /*!40000 ALTER TABLE `digestor` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -234,4 +233,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-10-22  1:40:38
+-- Dump completed on 2025-10-24  1:30:44

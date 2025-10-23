@@ -7,7 +7,7 @@ const db = require('../db');
 router.get('/ranking', async function (req, res, next) {
     try {
         const rows = await db.query(
-            `SELECT s.name, s.shorten_location, count(d.stallid) as count FROM is463backend.stall s left join is463backend.digestor d on s.id = d.stallid GROUP BY d.stallid, s.name, s.shorten_location ORDER BY count DESC;`, []
+            `SELECT s.id, s.name, s.shorten_location, COUNT(d.stallid) as count, COALESCE(SUM(CAST(d.weight AS DECIMAL(10,2))), 0) as total_weight FROM is463backend.stall s LEFT JOIN is463backend.digestor d ON s.id = d.stallid GROUP BY s.id, s.name, s.shorten_location ORDER BY total_weight DESC, count DESC;`, []
         );
         res.json(rows);
     } catch (err) {
