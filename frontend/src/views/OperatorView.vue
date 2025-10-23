@@ -2,9 +2,9 @@
   <div class="operator-container">
     <div class="container-fluid h-100">
       <div class="row h-100 justify-content-center align-items-stretch">
-        <div class="d-flex flex-column flex-grow-1 justify-content-between p-0 min-vh-100">
+        <div class="d-flex flex-column flex-grow-1 p-0 min-vh-100">
           <!-- Header with Logout Button -->
-          <div class="d-flex align-items-center justify-content-between px-3 pt-3">
+          <div class="d-flex align-items-center justify-content-between px-3 pt-3 pb-5">
             <div>
               <div class="fw-bold fs-5 mb-1">Food Waste Leaderboard</div>
               <div class="text-muted small">{{ currentDate }}</div>
@@ -36,8 +36,8 @@
             </div>
           </div>
 
-              <!-- Card at bottom -->
-          <div class="operator-card card col-12 col-md-8 mx-auto mb-0">
+          <!-- Card at bottom -->
+          <div class="operator-card card col-12 col-md-8 mx-auto mb-0 flex-grow-1">
             <div class="card-body p-3">
               <!-- Sort Buttons -->
               <div class="mb-3 d-flex gap-2 justify-content-center sort-btn-group">
