@@ -151,16 +151,11 @@ onMounted(async () => {
     const rankings = await getStallRankings()
     console.log('Raw rankings data:', rankings) // Debug log
     
-    // Map stall names to IDs based on database data as fallback
-    const stallNameToId = {
-      '1983 A Taste of Nanyang': 1,
-      'BRÆK. – Vegetarian Options': 2,
-      'Each-a-Cup': 3
-    }
+    // Backend now returns stall IDs; fallback mapping removed
     
     stallsData.value = rankings
       .map((stall) => ({
-        id: stall.id || stallNameToId[stall.name] || null, // Use backend ID or fallback to name mapping
+        id: stall.id, // Use backend ID only
         name: stall.name,
         location: stall.shorten_location,
         usage: stall.count,
