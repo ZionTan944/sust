@@ -93,7 +93,7 @@ const handleLogin = async () => {
     const result = await loginUser(email.value, password.value)
     console.log('Login success:', result.user)
     // TODO: Store user info etc
-    router.push('/operator')
+    router.push({ name: 'operator' })
   } catch (error) {
     alert(error.message)
     console.error('Login failed:', error)
