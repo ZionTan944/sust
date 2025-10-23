@@ -144,7 +144,7 @@ const defaultLogo = 'https://placehold.co/180x100?text=Logo'
   box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.1); 
   border: none; 
 }
-.recent-posts-btn { background:#eafaf1; color:#004; border: none; padding: 0.75rem; border-radius: 18px; font-weight:700; }
+.recent-posts-btn { background:#eafaf1; color:#000044; border: none; padding: 0.75rem; border-radius: 18px; font-weight:700; }
 .post-thumb { background-color:#dfefe6; height:180px; }
 
 /* header adjustments */
