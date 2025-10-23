@@ -7,7 +7,7 @@
           <div class="d-flex align-items-center justify-content-between px-3 pt-3">
             <div>
               <div class="fw-bold fs-5 mb-1">Food Waste Leaderboard</div>
-              <div class="text-muted small">16th September 2025</div>
+              <div class="text-muted small">{{ currentDate }}</div>
             </div>
             <LogoutButton @logout="handleLogout" />
           </div>
@@ -27,7 +27,7 @@
               </div>
               <div class="d-flex justify-content-between small">
                 <span></span>
-                <span class="fw-bold">1000KG</span>
+                <span class="fw-bold">500KG</span>
               </div>
               <div class="mt-2 text-muted small">
                 <font-awesome-icon icon="fa-solid fa-trophy" class="me-1 text-warning" />
@@ -88,10 +88,13 @@
                           <div class="small text-primary">{{ stall.location }}</div>
                         </div>
                       </div>
-                      <!-- Grade and Weight: aligned in one flex row -->
+                      <!-- Grade and Stats: aligned in one flex row -->
                       <div class="col-auto d-flex align-items-center justify-content-end">
                         <div class="grade-badge text-center me-2" :class="'grade-' + stall.grade">{{ stall.grade }}</div>
-                        <div class="fw-bold">{{ stall.usage }} KG</div>
+                        <div class="text-end">
+                          <div class="fw-bold">{{ stall.totalWeight.toFixed(1) }} kg</div>
+                          <div class="small text-muted">{{ stall.usage }} uses</div>
+                        </div>
                       </div>
                     </div>
                     </router-link>
@@ -111,10 +114,13 @@
                           <div class="small text-primary">{{ stall.location }}</div>
                         </div>
                       </div>
-                      <!-- Grade and Weight: aligned in one flex row -->
+                      <!-- Grade and Stats: aligned in one flex row -->
                       <div class="col-auto d-flex align-items-center justify-content-end">
                         <div class="grade-badge text-center me-2" :class="'grade-' + stall.grade">{{ stall.grade }}</div>
-                        <div class="fw-bold">{{ stall.usage }} KG</div>
+                        <div class="text-end">
+                          <div class="fw-bold">{{ stall.totalWeight.toFixed(1) }} kg</div>
+                          <div class="small text-muted">{{ stall.usage }} uses</div>
+                        </div>
                       </div>
                     </div>
                     </div>
@@ -135,8 +141,10 @@ import LogoutButton from '../components/LogoutButton.vue'
 import { useRouter } from 'vue-router'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { getStallRankings } from '../services/stall.js'
+import { useUserStore } from '../stores/user.js'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 const stallsData = ref([])
 const loading = ref(true)
@@ -145,30 +153,35 @@ const error = ref(null)
 const sortOptions = ['Daily', 'Weekly', 'Monthly', 'Year']
 const sortBy = ref('Weekly')
 
+// Get current date formatted nicely
+const currentDate = computed(() => {
+  const now = new Date()
+  const options = { 
+    day: 'numeric', 
+    month: 'long', 
+    year: 'numeric' 
+  }
+  return now.toLocaleDateString('en-GB', options)
+})
+
 // Fetch stall rankings from backend
 onMounted(async () => {
   try {
     const rankings = await getStallRankings()
     console.log('Raw rankings data:', rankings) // Debug log
     
-    // Map stall names to IDs based on database data as fallback
-    const stallNameToId = {
-      '1983 A Taste of Nanyang': 1,
-      'BRÆK. – Vegetarian Options': 2,
-      'Each-a-Cup': 3
-    }
-    
-    stallsData.value = rankings
-      .map((stall) => ({
-        id: stall.id || stallNameToId[stall.name] || null, // Use backend ID or fallback to name mapping
-        name: stall.name,
-        location: stall.shorten_location,
-        usage: stall.count,
-        icon: getStallIcon(stall.name),
-        iconBg: getIconBackground(stall.count),
-        grade: getGrade(stall.count)
-      }))
-      .filter(stall => stall.id != null && stall.id !== undefined) // Filter out stalls without valid IDs
+    stallsData.value = rankings.map((stall) => ({
+      id: stall.id, // Backend now returns proper IDs
+      name: stall.name,
+      location: stall.shorten_location,
+      usage: stall.count, // Number of times digestor was used
+      totalWeight: parseFloat(stall.total_weight) || 0, // Total weight in kg
+      icon: getStallIcon(stall.name),
+      iconBg: getIconBackground(stall.total_weight || 0),
+      grade: getGrade(stall.total_weight || 0),
+      // Add timestamp for potential future sorting
+      lastUpdated: new Date()
+    }))
     
     console.log('Processed stalls data:', stallsData.value) // Debug log
   } catch (err) {
@@ -197,43 +210,65 @@ function getStallIcon(stallName) {
   }
 }
 
-// Helper function to get icon background based on usage
-function getIconBackground(usage) {
-  if (usage >= 5) return '#4db6ff'
-  else if (usage >= 2) return '#ffe082'
+// Helper function to get icon background based on total weight
+function getIconBackground(totalWeight) {
+  if (totalWeight >= 5) return '#4db6ff'
+  else if (totalWeight >= 2) return '#ffe082'
   else return '#ff8a80'
 }
 
-// Helper function to get grade based on usage
-function getGrade(usage) {
-  if (usage >= 5) return 'A'
-  else if (usage >= 2) return 'B'
+// Helper function to get grade based on total weight
+function getGrade(totalWeight) {
+  if (totalWeight >= 5) return 'A'
+  else if (totalWeight >= 2) return 'B'
   else return 'C'
 }
 
+// Implement proper sorting based on sortBy value
 const sortedStalls = computed(() => {
-  if (loading.value || error.value) return []
-  // Data from backend is already sorted by count (usage) descending
-  return stallsData.value
+  if (loading.value || error.value || !stallsData.value.length) return []
+  
+  const stalls = [...stallsData.value]
+  
+  // For now, all sort options sort by total weight
+  // In the future, you could implement different sorting logic for each period
+  switch (sortBy.value) {
+    case 'Daily':
+      // Could filter data from last 24 hours and sort
+      return stalls.sort((a, b) => b.totalWeight - a.totalWeight)
+    case 'Weekly':
+      // Default backend sorting (already sorted by total weight)
+      return stalls.sort((a, b) => b.totalWeight - a.totalWeight)
+    case 'Monthly':
+      // Could filter data from last 30 days and sort
+      return stalls.sort((a, b) => b.totalWeight - a.totalWeight)
+    case 'Year':
+      // Could filter data from last year and sort
+      return stalls.sort((a, b) => b.totalWeight - a.totalWeight)
+    default:
+      return stalls.sort((a, b) => b.totalWeight - a.totalWeight)
+  }
 })
 
 const totalWeight = computed(() => {
   if (loading.value || error.value) return 0
-  return stallsData.value.reduce((sum, s) => sum + s.usage, 0)
+  return stallsData.value.reduce((sum, s) => sum + s.totalWeight, 0)
 })
 
 const totalPercent = computed(() => {
   const total = totalWeight.value
-  return Math.min(100, Math.round((total / 1000) * 100)) // 1000kg max for demo
+  return Math.min(100, Math.round((total / 500) * 100)) // 500kg max target
 })
 
 const topStall = computed(() => {
   if (loading.value || error.value || stallsData.value.length === 0) return 'No data'
-  return stallsData.value[0]?.name || 'No data'
+  const sorted = sortedStalls.value
+  return sorted[0]?.name || 'No data'
 })
 
 function handleLogout() {
-  // Clear user state if any, then redirect
+  // Use Pinia store to clear user state and redirect
+  userStore.logout()
   router.push('/login')
 }
 </script>

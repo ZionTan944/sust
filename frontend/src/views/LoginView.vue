@@ -3,24 +3,21 @@
     <div class="container-fluid h-100">
       <div class="row h-100 justify-content-center align-items-stretch">
         <div class="d-flex flex-column flex-grow-1 justify-content-between p-0 min-vh-100">
-          <!-- Welcome Title and Back Button on Green Background -->
-          <div class="flex-grow-1 d-flex align-items-center justify-content-center position-relative">
-            <button class="back-button btn btn-link text-dark p-0 position-absolute start-0 top-0 mt-3 ms-3" @click="goBack">
-              <font-awesome-icon icon="fas fa-arrow-left" size="lg" />
-            </button>
-            <h2 class="welcome-title text-center mb-0 display-4 display-md-3 display-lg-2 w-100">Welcome</h2>
+          <!-- Welcome Title on Green Background -->
+          <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+            <h2 class="welcome-title text-center mb-0 display-4 display-md-3 display-lg-2 w-100 fw-normal">Welcome</h2>
           </div>
           <!-- fill width for mobile only -->
           <div class="welcome-card card col-12 col-md-8 mx-auto mb-0">
-            <div class="card-body p-3 p-sm-4">
+            <div class="card-body p-4 p-sm-5">
               <form @submit.prevent="handleLogin">
                 <!-- Username/Email Field -->
-                <div class="form-group mb-4">
-                  <label class="form-label fw-semibold">Username Or Email</label>
+                <div class="form-group mb-5">
+                  <label class="form-label fw-semibold fs-5">Username Or Email</label>
                   <div class="input-container">
                     <input 
                       type="email" 
-                      class="form-control custom-input" 
+                      class="form-control custom-input fs-5" 
                       v-model="email"
                       placeholder="example@example.com"
                       required
@@ -28,12 +25,12 @@
                   </div>
                 </div>
                 <!-- Password Field -->
-                <div class="form-group mb-4">
-                  <label class="form-label fw-semibold">Password</label>
+                <div class="form-group mb-5">
+                  <label class="form-label fw-semibold fs-5">Password</label>
                   <div class="input-container position-relative">
                     <input 
                       :type="showPassword ? 'text' : 'password'" 
-                      class="form-control custom-input" 
+                      class="form-control custom-input fs-5" 
                       v-model="password"
                       placeholder="••••••••"
                       required
@@ -46,19 +43,31 @@
                       <font-awesome-icon 
                         :icon="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'" 
                         class="text-muted"
+                        size="lg"
                       />
                     </button>
                   </div>
                 </div>
                 <!-- Login Button -->
-                <div class="d-grid mb-3">
-                  <button type="submit" class="btn btn-login py-2 py-sm-3 px-3 px-sm-4">
-                    Log In
+                <div class="d-grid mb-4">
+                  <button 
+                    type="submit" 
+                    class="btn btn-login py-3 py-sm-4 px-4 px-sm-5 fs-5"
+                    :disabled="userStore.loading"
+                  >
+                    <span v-if="userStore.loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    {{ userStore.loading ? 'Logging in...' : 'Log In' }}
                   </button>
                 </div>
+                
+                <!-- Error Message -->
+                <div v-if="userStore.error" class="alert alert-danger fs-6" role="alert">
+                  {{ userStore.error }}
+                </div>
+                
                 <!-- Forgot Password Link -->
-                <div class="text-center">
-                  <a href="#" class="forgot-password-link">Forgot Password?</a>
+                <div class="text-center mt-4">
+                  <a href="#" class="forgot-password-link fs-6">Forgot Password?</a>
                 </div>
               </form>
             </div>
@@ -72,9 +81,10 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { loginUser } from '../services/login'
+import { useUserStore } from '../stores/user.js'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 const email = ref('')
 const password = ref('')
@@ -84,19 +94,23 @@ const togglePassword = () => {
   showPassword.value = !showPassword.value
 }
 
-const goBack = () => {
-  router.go(-1)
-}
-
 const handleLogin = async () => {
+  // Clear any previous errors
+  userStore.clearError()
+  
   try {
-    const result = await loginUser(email.value, password.value)
-    console.log('Login success:', result.user)
-    // TODO: Store user info etc
-    router.push('/operator')
+    const result = await userStore.login(email.value, password.value)
+    
+    if (result.success) {
+      console.log('Login success:', result.user)
+      router.push('/operator')
+    } else {
+      // Error is already set in the store
+      console.error('Login failed:', result.error)
+    }
   } catch (error) {
-    alert(error.message)
-    console.error('Login failed:', error)
+    // Additional error handling if needed
+    console.error('Login error:', error)
   }
 }
 </script>
