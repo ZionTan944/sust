@@ -26,6 +26,11 @@ app.get('/', (req, res) => {
 // auth routes
 app.use('/auth', authRouter);
 
+const challengeRouter = require('./routes/challenge');
+
+// challenges
+app.use('/challenges', challengeRouter);
+
 
 
 // digestor
@@ -87,6 +92,17 @@ app.get('/user/ranking', async function (req, res, next) {
 		res.json(await user.getAllStudentPoints());
 	} catch (err) {
 		console.error(`Error while getting user point rankings `, err.message);
+		next(err);
+	}
+});
+
+// get total points for an individual user
+app.get('/user/:userid/points', async function (req, res, next) {
+	const userid = req.params.userid;
+	try {
+		res.json(await user.getUserPoints(userid));
+	} catch (err) {
+		console.error(`Error while getting points for user ${userid} `, err.message);
 		next(err);
 	}
 });

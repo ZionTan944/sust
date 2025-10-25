@@ -9,7 +9,19 @@ async function getAllStudentPoints() {
     }
 }
 
+async function getUserPoints(userid) {
+    const rows = await db.query(
+        `SELECT IFNULL(SUM(CAST(points AS SIGNED)), 0) as points FROM is463backend.points WHERE userid = ?`, [userid]
+    );
+    // rows will be an array with one object containing points
+    return {
+        userid,
+        points: (rows && rows[0] && rows[0].points) ? rows[0].points : 0
+    }
+}
+
 
 module.exports = {
-    getAllStudentPoints
+    getAllStudentPoints,
+    getUserPoints
 }

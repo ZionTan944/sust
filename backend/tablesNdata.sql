@@ -235,3 +235,35 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2025-10-22  1:40:38
+
+--
+-- Additional tables for challenges and completions
+--
+DROP TABLE IF EXISTS `challenge`;
+CREATE TABLE `challenge` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) NOT NULL,
+  `description` longtext,
+  `points` int NOT NULL DEFAULT 0,
+  `created_by` varchar(100) DEFAULT NULL,
+  `active` tinyint(1) NOT NULL DEFAULT 1,
+  `date_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `challenge_completion`;
+CREATE TABLE `challenge_completion` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `challengeid` int NOT NULL,
+  `userid` int NOT NULL,
+  `evidence` longtext,
+  `points_awarded` int NOT NULL,
+  `verified` tinyint(1) NOT NULL DEFAULT 0,
+  `date_completed` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `completion_challenge_idx` (`challengeid`),
+  KEY `completion_user_idx` (`userid`),
+  CONSTRAINT `completion_challenge_fk` FOREIGN KEY (`challengeid`) REFERENCES `challenge` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `completion_user_fk` FOREIGN KEY (`userid`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
