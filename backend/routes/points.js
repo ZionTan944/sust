@@ -9,7 +9,7 @@ router.get('/total/:userid', async function (req, res, next) {
     userid = req.params.userid;
     try {
         const rows = await db.query(
-            `SELECT IFNULL(sum(points),0) as points FROM is463backend.user u LEFT JOIN is463backend.points p on u.id = p.userid where p.userid = ? GROUP BY u.id ORDER BY points DESC;`, [userid]
+            `SELECT IFNULL(sum(points),0) as points FROM user u LEFT JOIN points p on u.id = p.userid where p.userid = ? GROUP BY u.id ORDER BY points DESC;`, [userid]
         );
 
         res.json(rows[0]);
@@ -25,7 +25,7 @@ router.get('/:userid', async function (req, res, next) {
     userid = req.params.userid;
     try {
         const rows = await db.query(
-            `SELECT points, date_created FROM is463backend.points where userid = ?;`, [userid]
+            `SELECT points, date_created FROM points where userid = ?;`, [userid]
         );
 
         res.json(rows);

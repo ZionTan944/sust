@@ -8,7 +8,7 @@ const db = require('../db');
 router.get('/', async function (req, res, next) {
   try {
     const rows = await db.query(
-      `SELECT count(stallid) as count FROM is463backend.digestor;`, []
+      `SELECT count(stallid) as count FROM digestor;`, []
     );
 
     res.json(rows[0]);
@@ -30,7 +30,7 @@ router.post('/', async function (req, res, next) {
   stallid = req.body.stallid;
   try {
     const rows = await db.query(
-      `INSERT INTO is463backend.digestor (stallid) VALUES (?);`, [stallid]
+      `INSERT INTO digestor (stallid) VALUES (?);`, [stallid]
     );
 
     res.json(rows)

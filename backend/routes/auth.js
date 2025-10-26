@@ -11,7 +11,7 @@ router.post('/login', async (req, res, next) => {
       return res.status(400).json({ error: 'Missing email or password' });
     }
 
-    const rows = await db.query('SELECT id, username, email, faculty, password FROM is463backend.user WHERE email = ? LIMIT 1', [email]);
+    const rows = await db.query('SELECT id, username, email, faculty, password FROM user WHERE email = ? LIMIT 1', [email]);
     if (!rows || rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -42,17 +42,17 @@ router.post('/register', async (req, res, next) => {
     }
 
     // check if email already exists
-    const existing = await db.query('SELECT id FROM is463backend.user WHERE email = ? LIMIT 1', [email]);
+    const existing = await db.query('SELECT id FROM user WHERE email = ? LIMIT 1', [email]);
     if (existing && existing.length > 0) {
       return res.status(409).json({ error: 'Email already registered' });
     }
 
     // Note: passwords are stored in plaintext in this project for now.
     // For production, hash passwords with bcrypt before storing.
-    const result = await db.query('INSERT INTO is463backend.user (username, email, faculty, password) VALUES (?, ?, ?, ?)', [username, email, faculty, password]);
+    const result = await db.query('INSERT INTO user (username, email, faculty, password) VALUES (?, ?, ?, ?)', [username, email, faculty, password]);
 
     // result.insertId contains the new user id
-    const newUserRows = await db.query('SELECT id, username, email, faculty FROM is463backend.user WHERE id = ? LIMIT 1', [result.insertId]);
+    const newUserRows = await db.query('SELECT id, username, email, faculty FROM user WHERE id = ? LIMIT 1', [result.insertId]);
     const newUser = newUserRows[0];
     res.status(201).json({ user: newUser });
   } catch (err) {

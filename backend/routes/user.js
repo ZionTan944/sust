@@ -8,7 +8,7 @@ const db = require('../db');
 router.get('/ranking', async function (req, res, next) {
     try {
         const rows = await db.query(
-            `SELECT u.username, u.faculty, IFNULL(sum(points),0) as points FROM is463backend.user u LEFT JOIN is463backend.points p on u.id = p.userid where ( isnull(points) OR points >= 0) GROUP BY u.username, u.faculty ORDER BY points DESC;`, []
+            `SELECT u.username, u.faculty, IFNULL(sum(points),0) as points FROM user u LEFT JOIN points p on u.id = p.userid where ( isnull(points) OR points >= 0) GROUP BY u.username, u.faculty ORDER BY points DESC;`, []
         );
 
         res.json(rows);
@@ -24,7 +24,7 @@ router.get('/ranking/:faculty', async function (req, res, next) {
     faculty = req.params.faculty;
     try {
         const rows = await db.query(
-            `SELECT u.username, u.faculty, IFNULL(sum(points),0) as points FROM is463backend.user u LEFT JOIN is463backend.points p on u.id = p.userid where ( isnull(points) OR points >= 0) AND u.faculty = ? GROUP BY u.username, u.faculty ORDER BY points DESC;`, [faculty]
+            `SELECT u.username, u.faculty, IFNULL(sum(points),0) as points FROM user u LEFT JOIN points p on u.id = p.userid where ( isnull(points) OR points >= 0) AND u.faculty = ? GROUP BY u.username, u.faculty ORDER BY points DESC;`, [faculty]
         );
 
         res.json(rows);
