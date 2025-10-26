@@ -37,6 +37,9 @@ app.use('/challenges', challengeRouter);
 // stall routes
 app.use('/stall', stall);
 
+// points routes
+app.use('/points', points);
+
 // user routes
 app.use('/user', user);
 

@@ -20,8 +20,34 @@ async function getUserPoints(userid) {
     }
 }
 
+async function getUserPointsByRange(userid, range = 'all') {
+    // range: 'week' => last 7 days, 'month' => last 30 days, 'all' => all time
+    let sql, params;
+    if (range === 'week') {
+        // only count positive/earned points
+        sql = `SELECT IFNULL(SUM(CAST(points AS SIGNED)),0) as points FROM points WHERE userid = ? AND points >= 0 AND date_created >= DATE_SUB(NOW(), INTERVAL 7 DAY)`;
+        params = [userid];
+    } else if (range === 'month') {
+        // only count positive/earned points
+        sql = `SELECT IFNULL(SUM(CAST(points AS SIGNED)),0) as points FROM points WHERE userid = ? AND points >= 0 AND date_created >= DATE_SUB(NOW(), INTERVAL 30 DAY)`;
+        params = [userid];
+    } else {
+        // all time: only count positive/earned points
+        sql = `SELECT IFNULL(SUM(CAST(points AS SIGNED)),0) as points FROM points WHERE userid = ? AND points >= 0`;
+        params = [userid];
+    }
+
+    const rows = await db.query(sql, params);
+    return {
+        userid,
+        range,
+        points: (rows && rows[0] && typeof rows[0].points !== 'undefined') ? rows[0].points : 0
+    };
+}
+
 
 module.exports = {
     getAllStudentPoints,
-    getUserPoints
+    getUserPoints,
+    getUserPointsByRange
 }
