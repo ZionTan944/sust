@@ -6,6 +6,7 @@ import OperatorDetailView from '../views/OperatorDetailView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import LeaderboardView from '../views/LeaderboardView.vue'
 import { useUserStore } from '../stores/user.js'
+import RewardView from '@/views/RewardView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -45,13 +46,19 @@ const router = createRouter({
       component: ProfileView,
       meta: { requiresAuth: true }
     },
+    {
+      path: '/rewards',
+      name: 'rewards',
+      component: RewardView,
+      meta: { requiresAuth: true }
+    },
   ],
 })
 
 // Navigation guard to check authentication
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
-  
+
   // Check if route requires authentication
   if (to.matched.some(record => record.meta.requiresAuth)) {
     // Check if user is authenticated

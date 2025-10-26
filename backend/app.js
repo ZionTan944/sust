@@ -19,6 +19,7 @@ const digestor = require('./routes/digestor');
 const stall = require('./routes/stall');
 const user = require('./routes/user');
 const points = require('./routes/points');
+const rewards = require('./routes/reward')
 
 app.get('/', (req, res) => {
 	res.send('Hello World')
@@ -38,6 +39,11 @@ app.use('/stall', stall);
 
 // user routes
 app.use('/user', user);
+
+// points routes
+app.use('/points', points);
+
+app.use('/rewards', rewards);
 
 // get total points for an individual user
 app.get('/user/:userid/points', async function (req, res, next) {

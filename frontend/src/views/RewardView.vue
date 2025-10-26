@@ -1,20 +1,24 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import {ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user.js'
-import { getChallenges, getPointsByUser } from '@/services/profile.js'
+import { getValidRewards } from '@/services/reward.js'
+import { getPointsByUser } from '@/services/profile.js'
+
 import LogoutButton from '../components/LogoutButton.vue'
 
 const loading = ref(true)
 const router = useRouter()
 const userStore = useUserStore()
-const challenges = ref([])
+const rewards = ref([])
 const userData = ref([])
 const totalPercent = ref(0)
 
+
+
 onMounted(async () => {
   loading.value = true
-  challenges.value = await getChallenges()
+  rewards.value = await getValidRewards()
   userData.value = await getPointsByUser(userStore.currentUser.id)
   totalPercent.value = userData.value.points / 100
   loading.value = false
@@ -26,22 +30,7 @@ function handleLogout() {
   userStore.logout()
   router.push('/login')
 }
-function getIcon(challenge) {
-  const name = challenge.toLowerCase()
-  if (name.includes('taste') || name.includes('nanyang') || name.includes('1983')) {
-    return ['fa-solid', 'bowl-rice']
-  } else if (name.includes('bræk') || name.includes('vegetarian')) {
-    return ['fa-solid', 'leaf']
-  } else if (name.includes('cup') || name.includes('bubble') || name.includes('tea')) {
-    return ['fa-solid', 'mug-saucer']
-  } else if (name.includes('pasta') || name.includes('noodle')) {
-    return ['fa-solid', 'bowl-food']
-  } else if (name.includes('cai png') || name.includes('rice')) {
-    return ['fa-solid', 'bowl-rice']
-  } else {
-    return ['fa-solid', 'utensils']
-  }
-}
+
 </script>
 
 <template>
@@ -51,7 +40,7 @@ function getIcon(challenge) {
         <div class="d-flex flex-column flex-grow-1 p-0 min-vh-100">
           <div class="d-flex align-items-center justify-content-between px-3 pt-3 pb-5">
             <div>
-              <div class="fw-bold fs-5 mb-1">Dashboard</div>
+              <div class="fw-bold fs-5 mb-1">Reward Redemption</div>
             </div>
             <LogoutButton @logout="handleLogout" />
           </div>
@@ -60,7 +49,7 @@ function getIcon(challenge) {
             <div class="progress-section-inner p-3">
               <div class="d-flex align-items-center mb-2 justify-content-between">
                 <span class="fw-semibold">Current Points</span>
-                <RouterLink to="/rewards" class="fw-semibold text-decoration-underline text-primary">Rewards</RouterLink>
+                <RouterLink to="/profile" class="fw-semibold text-decoration-underline text-primary">Challenges</RouterLink>
 
               </div>
               <div class="d-flex align-items-end mb-1">
@@ -90,41 +79,26 @@ function getIcon(challenge) {
                   <div class="spinner-border text-success" role="status">
                     <span class="visually-hidden">Loading...</span>
                   </div>
-                  <p class="mt-2 text-muted small">Loading challenges...</p>
+                  <p class="mt-2 text-muted small">Loading rewards...</p>
                 </div>
                 <ol v-else class="list-unstyled leaderboard-list">
-                  <!-- TODO -->
-                  <div class="mini-card p-1 m-1 d-flex flex-row align-items-center">
-                      <div class="form-label mb-0">[NUM] Points Earned </div>
-                      <select class="form-select w-auto border-0">
-                        <option>Last Week</option>
-                        <option>Last Month</option>
-                        <option>All Time</option>
-                      </select>
-                  </div>
-
+                  <h2 class="text-center">Rewards</h2>
                   <li
-                    v-for="(challenge, i) in challenges"
-                    :key="challenge.id"
+                    v-for="reward in rewards"
+                    :key="reward.id"
                     class="mb-3 leaderboard-item"
                   >
                     <div class="row align-items-center gx-2">
                       <div class="col d-flex align-items-center">
-                        <div class="leaderboard-icon me-2">
-                          <font-awesome-icon
-                            :icon="getIcon(challenge.title)"
-                            class="text-white fs-4"
-                          />
-                        </div>
                         <div>
-                          <div :class="i == 0 ? 'fw-semibold first-item-text' : 'fw-semibold'">
-                            {{ challenge.title }}
+                          <div class='fw-semibold'>
+                            {{ reward.reward }}
                           </div>
-                          <div class="small text-primary">{{ challenge.description }}</div>
+                          <div class="small text-primary">{{ new Date(reward.valid_until).toLocaleString() }}</div>
                         </div>
                       </div>
                       <div class="col-auto d-flex align-items-center justify-content-end">
-                        <div class="fw-bold">{{ challenge.points }} pts</div>
+                        <div class="fw-bold">{{ reward.cost }} pts</div>
                       </div>
                     </div>
                   </li>
@@ -138,25 +112,10 @@ function getIcon(challenge) {
   </div>
 </template>
 <style scoped>
-.leaderboard-icon {
-  background-color: #4db6ff;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: solid white 1px;
-  border-radius: 50%;
-  font-size: 1.5rem;
-}
 .operator-container {
   background: linear-gradient(135deg, #00d09e 0%, #00b888 100%);
   min-height: 100vh;
   position: relative;
-}
-.mini-card {
-  background: #f6fff8;
-  /* Removed fixed height to allow card to grow naturally and avoid white gap */
 }
 .operator-card {
   background: #f6fff8;

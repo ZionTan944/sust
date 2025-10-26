@@ -115,7 +115,7 @@ DROP TABLE IF EXISTS `reward`;
 CREATE TABLE `reward` (
   `id` int NOT NULL AUTO_INCREMENT,
   `reward` varchar(45) NOT NULL,
-  `cost` varchar(45) NOT NULL,
+  `cost` int NOT NULL,
   `valid_until` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `date_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)

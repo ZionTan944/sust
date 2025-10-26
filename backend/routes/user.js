@@ -33,4 +33,5 @@ router.get('/ranking/:faculty', async function (req, res, next) {
         next(err);
     }
 });
+
 module.exports = router;
