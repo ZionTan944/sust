@@ -1,8 +1,8 @@
 <script setup>
-import {ref, onMounted } from 'vue'
+import {ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user.js'
-import { getValidRewards } from '@/services/reward.js'
+import { getAllRewards, getValidRewards } from '@/services/reward.js'
 import { getPointsByUser } from '@/services/profile.js'
 
 import LogoutButton from '../components/LogoutButton.vue'
@@ -13,16 +13,23 @@ const userStore = useUserStore()
 const rewards = ref([])
 const userData = ref([])
 const totalPercent = ref(0)
+const filter = ref("All")
 
 
 
 onMounted(async () => {
   loading.value = true
-  rewards.value = await getValidRewards()
-  userData.value = await getPointsByUser(userStore.currentUser.id)
-  totalPercent.value = userData.value.points / 100
-  loading.value = false
-
+  if (filter.value == "All"){
+    rewards.value = await getAllRewards(userStore.currentUser.id)
+    userData.value = await getPointsByUser(userStore.currentUser.id)
+    totalPercent.value = userData.value.points / 100
+    loading.value = false
+  }else{
+    rewards.value = await getValidRewards(userStore.currentUser.id)
+    userData.value = await getPointsByUser(userStore.currentUser.id)
+    totalPercent.value = userData.value.points / 100
+    loading.value = false
+  }
 })
 
 function handleLogout() {
@@ -31,6 +38,16 @@ function handleLogout() {
   router.push('/login')
 }
 
+watch(filter, async (newVal) => {
+  filter.value - newVal
+ if (filter.value == "All"){
+    rewards.value = await getAllRewards(userStore.currentUser.id)
+    loading.value = false
+  }else{
+    rewards.value = await getValidRewards(userStore.currentUser.id)
+    loading.value = false
+  }
+})
 </script>
 
 <template>
@@ -82,11 +99,16 @@ function handleLogout() {
                   <p class="mt-2 text-muted small">Loading rewards...</p>
                 </div>
                 <ol v-else class="list-unstyled leaderboard-list">
-                  <h2 class="text-center">Rewards</h2>
+                  <h2 class="text-center">
+                    <select class="header-select d-inline w-50 text-center border-0 bg-main" v-model="filter">
+                      <option value="All">All Rewards</option>
+                      <option value="Valid">Valid Rewards</option>
+                    </select>
+                  </h2>
                   <li
                     v-for="reward in rewards"
                     :key="reward.id"
-                    class="mb-3 leaderboard-item"
+                    :class="['mb-3 leaderboard-item', reward.claimed ? '' : '', reward.valid ? '' : 'disabled-color']"
                   >
                     <div class="row align-items-center gx-2">
                       <div class="col d-flex align-items-center">
@@ -94,7 +116,11 @@ function handleLogout() {
                           <div class='fw-semibold'>
                             {{ reward.reward }}
                           </div>
-                          <div class="small text-primary">{{ new Date(reward.valid_until).toLocaleString() }}</div>
+                          <div v-if="reward.valid && !reward.claimed" class="small text-primary">{{ new Date(reward.valid_until).toLocaleString() }}</div>
+                          <div v-else-if="reward.claimed" class="small text-success">Claimed</div>
+                          <div v-else class="small text-danger">Expired</div>
+
+
                         </div>
                       </div>
                       <div class="col-auto d-flex align-items-center justify-content-end">
@@ -112,6 +138,13 @@ function handleLogout() {
   </div>
 </template>
 <style scoped>
+
+.bg-main{
+  background: #f6fff8;
+}
+.disabled-color{
+  background-color: lightgray;
+}
 .operator-container {
   background: linear-gradient(135deg, #00d09e 0%, #00b888 100%);
   min-height: 100vh;
@@ -156,5 +189,6 @@ function handleLogout() {
 .leaderboard-item {
   border-radius: 1.5rem;
   padding: 0.75rem 1rem;
+  border: solid 1px black;
 }
 </style>

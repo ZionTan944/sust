@@ -1,7 +1,7 @@
 const db = require('../db');
 
-async function listChallenges() {
-  const rows = await db.query('SELECT id, title, description, points, active, date_created FROM challenge WHERE active = 1', []);
+async function listChallenges(userId) {
+  const rows = await db.query('SELECT t1.*, t1.id = t2.challengeid as submitted FROM (SELECT * FROM challenge c WHERE active = 1) as t1 LEFT JOIN (SELECT challengeid, verified FROM challenge c INNER JOIN challenge_completion cc ON c.id = cc.challengeid WHERE userid = ?) as t2 ON t1.id = t2.challengeid', [userId]);
   return rows;
 }
 

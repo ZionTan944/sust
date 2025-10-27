@@ -1,5 +1,5 @@
-export async function getAllRewards() {
-  const res = await fetch(import.meta.env.VITE_API_URL+`rewards/all`, {
+export async function getAllRewards(userId) {
+  const res = await fetch(import.meta.env.VITE_API_URL+`rewards/all/`+userId, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -15,8 +15,8 @@ export async function getAllRewards() {
   return res.json();
 }
 
-export async function getValidRewards() {
-  const res = await fetch(import.meta.env.VITE_API_URL+`rewards/valid`, {
+export async function getValidRewards(userId) {
+  const res = await fetch(import.meta.env.VITE_API_URL+`rewards/valid/`+userId, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

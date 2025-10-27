@@ -1,8 +1,8 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch  } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user.js'
-import { getChallenges, getPointsByUser } from '@/services/profile.js'
+import { getChallenges, getPointsByUser, sendChallengeCompletion, getPointByDuration } from '@/services/profile.js'
 import LogoutButton from '../components/LogoutButton.vue'
 
 const loading = ref(true)
@@ -11,14 +11,17 @@ const userStore = useUserStore()
 const challenges = ref([])
 const userData = ref([])
 const totalPercent = ref(0)
+const points = ref(0)
+const duration = ref("week")
+
 
 onMounted(async () => {
   loading.value = true
-  challenges.value = await getChallenges()
+  challenges.value = await getChallenges(userStore.currentUser.id)
   userData.value = await getPointsByUser(userStore.currentUser.id)
+  points.value = await getPointByDuration(userStore.currentUser.id, duration.value)
   totalPercent.value = userData.value.points / 100
   loading.value = false
-
 })
 
 function handleLogout() {
@@ -27,21 +30,22 @@ function handleLogout() {
   router.push('/login')
 }
 function getIcon(challenge) {
-  const name = challenge.toLowerCase()
-  if (name.includes('taste') || name.includes('nanyang') || name.includes('1983')) {
-    return ['fa-solid', 'bowl-rice']
-  } else if (name.includes('bræk') || name.includes('vegetarian')) {
-    return ['fa-solid', 'leaf']
-  } else if (name.includes('cup') || name.includes('bubble') || name.includes('tea')) {
-    return ['fa-solid', 'mug-saucer']
-  } else if (name.includes('pasta') || name.includes('noodle')) {
-    return ['fa-solid', 'bowl-food']
-  } else if (name.includes('cai png') || name.includes('rice')) {
-    return ['fa-solid', 'bowl-rice']
-  } else {
     return ['fa-solid', 'utensils']
-  }
 }
+
+async function submitChallenge(challenge){
+  await sendChallengeCompletion(userStore.currentUser.id, challenge.id, "")
+  loading.value = true
+  challenges.value = await getChallenges(userStore.currentUser.id)
+  userData.value = await getPointsByUser(userStore.currentUser.id)
+  points.value = await getPointByDuration(userStore.currentUser.id, duration.value)
+  totalPercent.value = userData.value.points / 100
+  loading.value = false
+}
+
+watch(duration, async (newVal) => {
+  points.value = await getPointByDuration(userStore.currentUser.id, newVal)
+})
 </script>
 
 <template>
@@ -60,13 +64,14 @@ function getIcon(challenge) {
             <div class="progress-section-inner p-3">
               <div class="d-flex align-items-center mb-2 justify-content-between">
                 <span class="fw-semibold">Current Points</span>
-                <RouterLink to="/rewards" class="fw-semibold text-decoration-underline text-primary">Rewards</RouterLink>
-
+                <RouterLink to="/rewards" class="fw-semibold text-decoration-underline text-primary"
+                  >Rewards</RouterLink
+                >
               </div>
               <div class="d-flex align-items-end mb-1">
                 <span class="fw-bold display-6 me-2">
                   {{ userData.points }}<span class="fs-5"> Pts</span>
-                  </span>
+                </span>
               </div>
               <div class="progress custom-progress mb-1">
                 <div
@@ -94,23 +99,23 @@ function getIcon(challenge) {
                 </div>
                 <ol v-else class="list-unstyled leaderboard-list">
                   <!-- TODO -->
-                  <div class="mini-card p-1 m-1 d-flex flex-row align-items-center">
-                      <div class="form-label mb-0">[NUM] Points Earned </div>
-                      <select class="form-select w-auto border-0">
-                        <option>Last Week</option>
-                        <option>Last Month</option>
-                        <option>All Time</option>
-                      </select>
+                  <div class="mini-card p-1 m-1 d-flex flex-row align-items-center justify-content-between">
+                    <div class="mb-0">{{ points.points }} Total Points Earned</div>
+                    <select class="form-select w-auto border-0" v-model="duration">
+                      <option value="week">Last Week</option>
+                      <option value="month">Last Month</option>
+                      <option value="all">All Time</option>
+                    </select>
                   </div>
 
                   <li
                     v-for="(challenge, i) in challenges"
                     :key="challenge.id"
-                    class="mb-3 leaderboard-item"
+                    :class="['mb-3 leaderboard-item', !challenge.submitted ? '' : 'disabled-color']"
                   >
-                    <div class="row align-items-center gx-2">
+                    <div v-if="!challenge.submitted" class="row align-items-center gx-2" @click="submitChallenge(challenge)">
                       <div class="col d-flex align-items-center">
-                        <div class="leaderboard-icon me-2">
+                        <div class="leaderboard-icon me-2 active-color">
                           <font-awesome-icon
                             :icon="getIcon(challenge.title)"
                             class="text-white fs-4"
@@ -121,6 +126,25 @@ function getIcon(challenge) {
                             {{ challenge.title }}
                           </div>
                           <div class="small text-primary">{{ challenge.description }}</div>
+                        </div>
+                      </div>
+                      <div class="col-auto d-flex align-items-center justify-content-end">
+                        <div class="fw-bold">{{ challenge.points }} pts</div>
+                      </div>
+                    </div>
+                    <div v-else class="row align-items-center gx-2 ">
+                      <div class="col d-flex align-items-center">
+                        <div class="leaderboard-icon me-2 disabled-color">
+                          <font-awesome-icon
+                            :icon="getIcon(challenge.title)"
+                            class="text-white fs-4"
+                          />
+                        </div>
+                        <div>
+                          <div :class="i == 0 ? 'fw-semibold first-item-text' : 'fw-semibold'">
+                            {{ challenge.title }}
+                          </div>
+                          <div class="small text-primary">Challenge Completed</div>
                         </div>
                       </div>
                       <div class="col-auto d-flex align-items-center justify-content-end">
@@ -138,8 +162,13 @@ function getIcon(challenge) {
   </div>
 </template>
 <style scoped>
-.leaderboard-icon {
+.active-color{
   background-color: #4db6ff;
+}
+.disabled-color{
+  background-color: lightgray;
+}
+.leaderboard-icon {
   width: 48px;
   height: 48px;
   display: flex;
@@ -197,5 +226,6 @@ function getIcon(challenge) {
 .leaderboard-item {
   border-radius: 1.5rem;
   padding: 0.75rem 1rem;
+  border: solid 1px black;
 }
 </style>

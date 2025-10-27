@@ -3,9 +3,9 @@ const router = express.Router();
 const challengeService = require('../services/challenge');
 
 // list challenges
-router.get('/', async (req, res, next) => {
+router.get('/all/:user_id', async (req, res, next) => {
   try {
-    res.json(await challengeService.listChallenges());
+    res.json(await challengeService.listChallenges(req.params.user_id));
   } catch (err) {
     console.error('Error listing challenges', err.message);
     next(err);
@@ -48,7 +48,7 @@ router.post('/', async (req, res, next) => {
 router.post('/:challengeid/complete', async (req, res, next) => {
   try {
     const challengeid = req.params.challengeid;
-    const { userid, evidence } = req.body || {};
+    const { userid  , evidence } = req.body || {};
     if (!userid) return res.status(400).json({ error: 'Missing userid in body' });
     const result = await challengeService.recordCompletion(userid, challengeid, evidence);
     if (result.alreadyCompleted) return res.status(409).json({ error: 'Challenge already completed by user' });
