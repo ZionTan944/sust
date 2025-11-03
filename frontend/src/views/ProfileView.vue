@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user.js'
 import { getChallenges, getPointsByUser, sendChallengeCompletion, getPointByDuration } from '@/services/profile.js'
 import LogoutButton from '../components/LogoutButton.vue'
+import { addToast } from '@/stores/toast.js'
+
 
 const loading = ref(true)
 const router = useRouter()
@@ -35,12 +37,18 @@ function getIcon() {
 
 async function submitChallenge(challenge){
   loading.value = true
+  try{
   await sendChallengeCompletion(userStore.currentUser.id, challenge.id, "")
   challenges.value = await getChallenges(userStore.currentUser.id)
   userData.value = await getPointsByUser(userStore.currentUser.id)
   points.value = await getPointByDuration(userStore.currentUser.id, duration.value)
   totalPercent.value = userData.value.points / 100
+  }catch{
+    addToast('Challenge Submission Failed', 'Error')
+  }finally{
   loading.value = false
+
+  }
 }
 
 watch(duration, async (newVal) => {

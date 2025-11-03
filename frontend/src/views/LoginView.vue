@@ -15,9 +15,9 @@
                 <div class="form-group mb-5">
                   <label class="form-label fw-semibold fs-5">Username Or Email</label>
                   <div class="input-container">
-                    <input 
-                      type="email" 
-                      class="form-control custom-input fs-5" 
+                    <input
+                      type="email"
+                      class="form-control custom-input fs-5"
                       v-model="email"
                       placeholder="example@example.com"
                       required
@@ -28,20 +28,20 @@
                 <div class="form-group mb-5">
                   <label class="form-label fw-semibold fs-5">Password</label>
                   <div class="input-container position-relative">
-                    <input 
-                      :type="showPassword ? 'text' : 'password'" 
-                      class="form-control custom-input fs-5" 
+                    <input
+                      :type="showPassword ? 'text' : 'password'"
+                      class="form-control custom-input fs-5"
                       v-model="password"
                       placeholder="••••••••"
                       required
                     />
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       class="password-toggle"
                       @click="togglePassword"
                     >
-                      <font-awesome-icon 
-                        :icon="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'" 
+                      <font-awesome-icon
+                        :icon="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"
                         class="text-muted"
                         size="lg"
                       />
@@ -50,8 +50,8 @@
                 </div>
                 <!-- Login Button -->
                 <div class="d-grid mb-4">
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     class="btn btn-login py-3 py-sm-4 px-4 px-sm-5 fs-5"
                     :disabled="userStore.loading"
                   >
@@ -59,12 +59,12 @@
                     {{ userStore.loading ? 'Logging in...' : 'Log In' }}
                   </button>
                 </div>
-                
+
                 <!-- Error Message -->
                 <div v-if="userStore.error" class="alert alert-danger fs-6" role="alert">
                   {{ userStore.error }}
                 </div>
-                
+
                 <!-- Forgot Password Link -->
                 <div class="text-center mt-4">
                   <a href="#" class="forgot-password-link fs-6">Forgot Password?</a>
@@ -82,6 +82,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user.js'
+import { addToast } from '@/stores/toast.js'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -97,20 +98,23 @@ const togglePassword = () => {
 const handleLogin = async () => {
   // Clear any previous errors
   userStore.clearError()
-  
+
   try {
     const result = await userStore.login(email.value, password.value)
-    
+
     if (result.success) {
       console.log('Login success:', result.user)
       router.push('/operator')
     } else {
       // Error is already set in the store
       console.error('Login failed:', result.error)
+      addToast("Login Failed. Try again later", "Error")
     }
   } catch (error) {
     // Additional error handling if needed
     console.error('Login error:', error)
+    addToast("Login Failed. Try again later", "Error")
+
   }
 }
 </script>

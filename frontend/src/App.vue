@@ -3,6 +3,7 @@ import { RouterView, useRouter } from 'vue-router'
 import NavBar from './components/NavBar.vue';
 import { onMounted } from 'vue';
 import {useUserStore} from "@/stores/user"
+import ToastContainer from './components/ToastContainer.vue';
 
 const userStore = useUserStore()
 const router = useRouter()
@@ -15,6 +16,7 @@ onMounted(()=>{
 </script>
 
 <template>
+  <ToastContainer/>
   <header>
     <NavBar v-if="userStore.isAuthenticated"/>
   </header>

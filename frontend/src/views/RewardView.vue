@@ -1,9 +1,10 @@
 <script setup>
-import {ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user.js'
 import { claimReward, getAllRewards, getValidRewards } from '@/services/reward.js'
 import { getPointsByUser } from '@/services/profile.js'
+import { addToast } from '@/stores/toast.js'
 
 import LogoutButton from '../components/LogoutButton.vue'
 
@@ -13,38 +14,48 @@ const userStore = useUserStore()
 const rewards = ref([])
 const userData = ref([])
 const totalPercent = ref(0)
-const filter = ref("All")
+const filter = ref('All')
 
-async function submitReward(rewardId){
+async function submitReward(rewardId) {
   loading.value = true
-  await claimReward(rewardId, userStore.currentUser.id)
-  if (filter.value == "All"){
-    rewards.value = await getAllRewards(userStore.currentUser.id)
-    userData.value = await getPointsByUser(userStore.currentUser.id)
-    totalPercent.value = userData.value.points / 100
-    loading.value = false
-  }else{
-    rewards.value = await getValidRewards(userStore.currentUser.id)
-    userData.value = await getPointsByUser(userStore.currentUser.id)
-    totalPercent.value = userData.value.points / 100
+  try {
+    await claimReward(rewardId, userStore.currentUser.id)
+    if (filter.value == 'All') {
+      rewards.value = await getAllRewards(userStore.currentUser.id)
+      userData.value = await getPointsByUser(userStore.currentUser.id)
+      totalPercent.value = userData.value.points / 100
+    } else {
+      rewards.value = await getValidRewards(userStore.currentUser.id)
+      userData.value = await getPointsByUser(userStore.currentUser.id)
+      totalPercent.value = userData.value.points / 100
+    }
+
+  } catch (error) {
+    addToast('Reward Claim Failed', 'Error')
+
+  } finally {
     loading.value = false
   }
-
 }
-
 
 onMounted(async () => {
   loading.value = true
-  if (filter.value == "All"){
+  try {
+  if (filter.value == 'All') {
     rewards.value = await getAllRewards(userStore.currentUser.id)
     userData.value = await getPointsByUser(userStore.currentUser.id)
     totalPercent.value = userData.value.points / 100
-    loading.value = false
-  }else{
+  } else {
     rewards.value = await getValidRewards(userStore.currentUser.id)
     userData.value = await getPointsByUser(userStore.currentUser.id)
     totalPercent.value = userData.value.points / 100
+  }}
+  catch (e){
+    addToast('Loading of Page Failed', 'Error')
+  }
+  finally{
     loading.value = false
+
   }
 })
 
@@ -56,10 +67,10 @@ function handleLogout() {
 
 watch(filter, async (newVal) => {
   filter.value - newVal
- if (filter.value == "All"){
+  if (filter.value == 'All') {
     rewards.value = await getAllRewards(userStore.currentUser.id)
     loading.value = false
-  }else{
+  } else {
     rewards.value = await getValidRewards(userStore.currentUser.id)
     loading.value = false
   }
@@ -82,13 +93,14 @@ watch(filter, async (newVal) => {
             <div class="progress-section-inner p-3">
               <div class="d-flex align-items-center mb-2 justify-content-between">
                 <span class="fw-semibold">Current Points</span>
-                <RouterLink to="/profile" class="fw-semibold text-decoration-underline text-primary">Challenges</RouterLink>
-
+                <RouterLink to="/profile" class="fw-semibold text-decoration-underline text-primary"
+                  >Challenges</RouterLink
+                >
               </div>
               <div class="d-flex align-items-end mb-1">
                 <span class="fw-bold display-6 me-2">
                   {{ userData.points }}<span class="fs-5"> Pts</span>
-                  </span>
+                </span>
               </div>
               <div class="progress custom-progress mb-1">
                 <div
@@ -116,7 +128,10 @@ watch(filter, async (newVal) => {
                 </div>
                 <ol v-else class="list-unstyled leaderboard-list">
                   <h2 class="text-center">
-                    <select class="header-select d-inline w-50 text-center border-0 bg-main" v-model="filter">
+                    <select
+                      class="header-select d-inline w-50 text-center border-0 bg-main"
+                      v-model="filter"
+                    >
                       <option value="All">All Rewards</option>
                       <option value="Valid">Valid Rewards</option>
                     </select>
@@ -124,20 +139,24 @@ watch(filter, async (newVal) => {
                   <li
                     v-for="reward in rewards"
                     :key="reward.id"
-                    :class="['mb-3 leaderboard-item', reward.claimed ? '' : '', reward.valid ? '' : 'disabled-color']"
-                    @click="reward.valid && !reward.claimed? submitReward(reward.id) : ()=>{}"
+                    :class="[
+                      'mb-3 leaderboard-item',
+                      reward.claimed ? '' : '',
+                      reward.valid ? '' : 'disabled-color',
+                    ]"
+                    @click="reward.valid && !reward.claimed ? submitReward(reward.id) : () => {}"
                   >
                     <div class="row align-items-center gx-2">
                       <div class="col d-flex align-items-center">
                         <div>
-                          <div class='fw-semibold'>
+                          <div class="fw-semibold">
                             {{ reward.reward }}
                           </div>
-                          <div v-if="reward.valid && !reward.claimed" class="small text-primary">{{ new Date(reward.valid_until).toLocaleString() }}</div>
+                          <div v-if="reward.valid && !reward.claimed" class="small text-primary">
+                            {{ new Date(reward.valid_until).toLocaleString() }}
+                          </div>
                           <div v-else-if="reward.claimed" class="small text-success">Claimed</div>
                           <div v-else class="small text-danger">Expired</div>
-
-
                         </div>
                       </div>
                       <div class="col-auto d-flex align-items-center justify-content-end">
@@ -155,11 +174,10 @@ watch(filter, async (newVal) => {
   </div>
 </template>
 <style scoped>
-
-.bg-main{
+.bg-main {
   background: #f6fff8;
 }
-.disabled-color{
+.disabled-color {
   background-color: lightgray;
 }
 .operator-container {
