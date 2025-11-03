@@ -7,7 +7,7 @@ const rewardService = require('../services/reward');
 router.get('/all/:user_id', async function (req, res, next) {
     try {
         const rows = await db.query(
-            `SELECT r.*, (valid_until > CURRENT_TIMESTAMP) as "valid", r.id=rr.id as "claimed" FROM reward r LEFT JOIN (SELECT * FROM rewardredemption WHERE userid = 1) rr ON r.id = rr.id ORDER BY claimed, valid DESC;`, [req.params.user_id]
+            `SELECT r.*, (valid_until > CURRENT_TIMESTAMP) as "valid", r.id=rr.rewardid as "claimed" FROM reward r LEFT JOIN (SELECT * FROM rewardredemption WHERE userid = ?) rr ON r.id = rr.rewardid ORDER BY claimed, valid DESC;`, [req.params.user_id]
         );
         res.json(rows);
     } catch (err) {
@@ -20,7 +20,7 @@ router.get('/all/:user_id', async function (req, res, next) {
 router.get('/valid/:user_id', async function (req, res, next) {
     try {
         const rows = await db.query(
-            `SELECT r.*, (valid_until > CURRENT_TIMESTAMP) as "valid", r.id=rr.id as "claimed" FROM reward r LEFT JOIN (SELECT * FROM rewardredemption WHERE userid = 1) rr ON r.id = rr.id WHERE valid_until > CURRENT_TIMESTAMP ORDER BY claimed, valid DESC;`, [req.params.user_id]
+            `SELECT r.*, (valid_until > CURRENT_TIMESTAMP) as "valid", r.id=rr.rewardid as "claimed" FROM reward r LEFT JOIN (SELECT * FROM rewardredemption WHERE userid = ?) rr ON r.id = rr.rewardid WHERE valid_until > CURRENT_TIMESTAMP ORDER BY claimed, valid DESC;`, [req.params.user_id]
         );
         res.json(rows);
     } catch (err) {

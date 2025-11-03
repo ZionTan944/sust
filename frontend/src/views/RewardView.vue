@@ -2,7 +2,7 @@
 import {ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user.js'
-import { getAllRewards, getValidRewards } from '@/services/reward.js'
+import { claimReward, getAllRewards, getValidRewards } from '@/services/reward.js'
 import { getPointsByUser } from '@/services/profile.js'
 
 import LogoutButton from '../components/LogoutButton.vue'
@@ -15,6 +15,22 @@ const userData = ref([])
 const totalPercent = ref(0)
 const filter = ref("All")
 
+async function submitReward(rewardId){
+  loading.value = true
+  await claimReward(rewardId, userStore.currentUser.id)
+  if (filter.value == "All"){
+    rewards.value = await getAllRewards(userStore.currentUser.id)
+    userData.value = await getPointsByUser(userStore.currentUser.id)
+    totalPercent.value = userData.value.points / 100
+    loading.value = false
+  }else{
+    rewards.value = await getValidRewards(userStore.currentUser.id)
+    userData.value = await getPointsByUser(userStore.currentUser.id)
+    totalPercent.value = userData.value.points / 100
+    loading.value = false
+  }
+
+}
 
 
 onMounted(async () => {
@@ -109,6 +125,7 @@ watch(filter, async (newVal) => {
                     v-for="reward in rewards"
                     :key="reward.id"
                     :class="['mb-3 leaderboard-item', reward.claimed ? '' : '', reward.valid ? '' : 'disabled-color']"
+                    @click="reward.valid && !reward.claimed? submitReward(reward.id) : ()=>{}"
                   >
                     <div class="row align-items-center gx-2">
                       <div class="col d-flex align-items-center">

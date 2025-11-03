@@ -29,13 +29,13 @@ function handleLogout() {
   userStore.logout()
   router.push('/login')
 }
-function getIcon(challenge) {
+function getIcon() {
     return ['fa-solid', 'utensils']
 }
 
 async function submitChallenge(challenge){
-  await sendChallengeCompletion(userStore.currentUser.id, challenge.id, "")
   loading.value = true
+  await sendChallengeCompletion(userStore.currentUser.id, challenge.id, "")
   challenges.value = await getChallenges(userStore.currentUser.id)
   userData.value = await getPointsByUser(userStore.currentUser.id)
   points.value = await getPointByDuration(userStore.currentUser.id, duration.value)

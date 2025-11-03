@@ -40,8 +40,8 @@
           <div class="operator-card card col-12 col-md-8 mx-auto mb-0 flex-grow-1">
             <div class="card-body p-3">
               <!-- Sort Buttons -->
-              <div class="mb-3 d-flex gap-2 justify-content-center sort-btn-group">
-                <button class="sort-btn" v-for="option in sortOptions" :key="option" :class="{ active: sortBy === option }" @click="sortBy = option">
+              <div class="mb-3 d-flex row justify-content-center sort-btn-group">
+                <button class="sort-btn text-truncate" v-for="option in sortOptions" :key="option" :class="[ sortBy === option ? 'active' : '', 'col-3' ]" @click="sortBy = option">
                   {{ option }}
                 </button>
               </div>
@@ -49,7 +49,7 @@
               <!-- Leaderboard -->
               <div>
                 <div class="fw-bold mb-2">Week 5 Leaderboard</div>
-                
+
                 <!-- Loading state -->
                 <div v-if="loading" class="text-center py-4">
                   <div class="spinner-border text-success" role="status">
@@ -72,9 +72,9 @@
                 <!-- Leaderboard content -->
                 <ol v-else class="list-unstyled leaderboard-list">
                   <li v-for="(stall, idx) in sortedStalls" :key="stall.id" class="mb-3 leaderboard-item">
-                    <router-link 
-                      v-if="stall.id" 
-                      :to="{ name: 'operator-detail', params: { id: stall.id.toString() } }" 
+                    <router-link
+                      v-if="stall.id"
+                      :to="{ name: 'operator-detail', params: { id: stall.id.toString() } }"
                       class="text-decoration-none text-body d-block"
                     >
                       <div class="row align-items-center gx-2">
@@ -99,8 +99,8 @@
                     </div>
                     </router-link>
                     <!-- Fallback for stalls without valid IDs -->
-                    <div 
-                      v-else 
+                    <div
+                      v-else
                       class="text-decoration-none text-body d-block opacity-50"
                     >
                       <div class="row align-items-center gx-2">
@@ -156,10 +156,10 @@ const sortBy = ref('Weekly')
 // Get current date formatted nicely
 const currentDate = computed(() => {
   const now = new Date()
-  const options = { 
-    day: 'numeric', 
-    month: 'long', 
-    year: 'numeric' 
+  const options = {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
   }
   return now.toLocaleDateString('en-GB', options)
 })
@@ -169,7 +169,7 @@ onMounted(async () => {
   try {
     const rankings = await getStallRankings()
     console.log('Raw rankings data:', rankings) // Debug log
-    
+
     stallsData.value = rankings.map((stall) => ({
       id: stall.id, // Backend now returns proper IDs
       name: stall.name,
@@ -182,7 +182,7 @@ onMounted(async () => {
       // Add timestamp for potential future sorting
       lastUpdated: new Date()
     }))
-    
+
     console.log('Processed stalls data:', stallsData.value) // Debug log
   } catch (err) {
     error.value = err.message
@@ -227,9 +227,9 @@ function getGrade(totalWeight) {
 // Implement proper sorting based on sortBy value
 const sortedStalls = computed(() => {
   if (loading.value || error.value || !stallsData.value.length) return []
-  
+
   const stalls = [...stallsData.value]
-  
+
   // For now, all sort options sort by total weight
   // In the future, you could implement different sorting logic for each period
   switch (sortBy.value) {
@@ -295,7 +295,7 @@ function handleLogout() {
   border-radius: 1rem;
   height: 1.5rem;
   overflow: hidden;
-} 
+}
 .sort-btn-group {
   background: #eafaf1;
   border-radius: 2rem;
