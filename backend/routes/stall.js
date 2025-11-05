@@ -32,5 +32,21 @@ router.get('/:stallid', async function (req, res, next) {
     }
 });
 
+// GET /stall/:stallid/images
+// get individual stall details
+router.get('/:stallid/images', async function (req, res, next) {
+    stallid = req.params.stallid;
+    try {
+        const rows = await db.query(
+            `SELECT image FROM sust.purchase where stallid = ? and image is not null limit 6;`, [stallid]
+        );
+
+        res.json(rows[0])
+    } catch (err) {
+        console.error(`Error in /stall/:stallid/images`, err.message);
+        next(err);
+    }
+});
+
 
 module.exports = router;
