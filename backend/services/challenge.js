@@ -1,7 +1,7 @@
 const db = require('../db');
 
 async function listChallenges(userId) {
-  const rows = await db.query('SELECT t1.*, t1.id = t2.challengeid as submitted FROM (SELECT c.*, progressT.progress FROM sust.challenge c LEFT JOIN (SELECT c.id, count(c.id) as progress FROM sust.challenge c LEFT JOIN sust.purchase p on c.stallid = p.stallid where p.date_created >= c.date_created and userid = ? group by c.id) progressT on c.id = progressT.id WHERE c.active = 1) as t1 LEFT JOIN (SELECT challengeid, verified FROM sust.challenge c INNER JOIN sust.challenge_completion cc ON c.id = cc.challengeid WHERE userid = ?) as t2 ON t1.id = t2.challengeid', [userId, userId]);
+  const rows = await db.query('SELECT t1.*, t1.id = t2.challengeid as submitted FROM (SELECT c.*, progressT.progress FROM sust.challenge c LEFT JOIN (SELECT c.id, count(c.id) as progress FROM sust.challenge c LEFT JOIN sust.purchase p on (c.stallid = p.stallid or c.stallid is null) and p.date_created >= c.date_created and userid = ? and active = 1 group by c.id) progressT on c.id = progressT.id WHERE c.active = 1) as t1 LEFT JOIN (SELECT challengeid, verified FROM sust.challenge c INNER JOIN sust.challenge_completion cc ON c.id = cc.challengeid WHERE userid = ?) as t2 ON t1.id = t2.challengeid ORDER BY submitted asc', [userId, userId]);
   return rows;
 }
 
