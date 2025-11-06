@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import OperatorView from '../views/OperatorView.vue'
 import OperatorDetailView from '../views/OperatorDetailView.vue'
@@ -7,6 +6,7 @@ import ProfileView from '../views/ProfileView.vue'
 import LeaderboardView from '../views/LeaderboardView.vue'
 import { useUserStore } from '../stores/user.js'
 import RewardView from '@/views/RewardView.vue'
+import CameraView from '@/views/CameraView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -50,6 +50,12 @@ const router = createRouter({
       path: '/rewards',
       name: 'rewards',
       component: RewardView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/camera',
+      name: 'camera',
+      component: CameraView,
       meta: { requiresAuth: true }
     },
   ],

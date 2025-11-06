@@ -103,16 +103,17 @@ const handleLogin = async () => {
     const result = await userStore.login(email.value, password.value)
 
     if (result.success) {
-      console.log('Login success:', result.user)
+      // console.log('Login success:', result.user)
+      addToast("Login Successful", "Success")
       router.push('/operator')
     } else {
       // Error is already set in the store
-      console.error('Login failed:', result.error)
+      // console.error('Login failed:', result.error)
       addToast("Login Failed. Try again later", "Error")
     }
   } catch (error) {
     // Additional error handling if needed
-    console.error('Login error:', error)
+    // console.error('Login error:', error)
     addToast("Login Failed. Try again later", "Error")
 
   }

@@ -1,5 +1,6 @@
 <template>
   <div class="operator-container">
+    <CameraPopup/>
     <div class="container-fluid h-100">
       <div class="row h-100 justify-content-center align-items-stretch">
         <div class="d-flex flex-column flex-grow-1 p-0 min-vh-100">
@@ -142,6 +143,7 @@ import { useRouter } from 'vue-router'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { getStallRankings } from '../services/stall.js'
 import { useUserStore } from '../stores/user.js'
+import CameraPopup from '@/components/CameraPopup.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -168,7 +170,7 @@ const currentDate = computed(() => {
 onMounted(async () => {
   try {
     const rankings = await getStallRankings()
-    console.log('Raw rankings data:', rankings) // Debug log
+    // console.log('Raw rankings data:', rankings) // Debug log
 
     stallsData.value = rankings.map((stall) => ({
       id: stall.id, // Backend now returns proper IDs
@@ -183,10 +185,10 @@ onMounted(async () => {
       lastUpdated: new Date()
     }))
 
-    console.log('Processed stalls data:', stallsData.value) // Debug log
+    // console.log('Processed stalls data:', stallsData.value) // Debug log
   } catch (err) {
     error.value = err.message
-    console.error('Error fetching stall rankings:', err)
+    // console.error('Error fetching stall rankings:', err)
   } finally {
     loading.value = false
   }

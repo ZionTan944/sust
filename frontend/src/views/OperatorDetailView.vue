@@ -21,7 +21,7 @@
           <!-- Combined Info + Posts card -->
           <div class="operator-card card mx-auto" style="margin-bottom:0; min-height:70vh; display:flex; flex-direction:column;">
             <div class="card-body flex-grow-1 d-flex flex-column " style="overflow-y:auto; padding-bottom: 4rem;">
-              
+
               <!-- Loading state -->
               <div v-if="loading" class="text-center py-4">
                 <div class="spinner-border text-success" role="status">
@@ -86,6 +86,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import BackButton from '../components/BackButton.vue'
 import { getStallById } from '../services/stall.js'
+import { addToast } from '@/stores/toast'
 
 const route = useRoute()
 const id = Number(route.params.id)
@@ -100,7 +101,8 @@ onMounted(async () => {
     stallData.value = await getStallById(id)
   } catch (err) {
     error.value = err.message
-    console.error('Error fetching stall data:', err)
+    // console.error('Error fetching stall data:', err)
+    addToast("Error fetching stall dat. Try again later", "Error")
   } finally {
     loading.value = false
   }
@@ -138,11 +140,11 @@ const defaultLogo = 'https://placehold.co/180x100?text=Logo'
 <style scoped>
 .operator-container { background: linear-gradient(135deg, #00D09E 0%, #00B888 100%); min-height:100vh; }
 .logo-box { width:200px; height:140px; background:#fff; border-radius:26px; }
-.operator-card { 
-  background: #f6fff8; 
-  border-radius: 30px 30px 0 0; 
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.1); 
-  border: none; 
+.operator-card {
+  background: #f6fff8;
+  border-radius: 30px 30px 0 0;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.1);
+  border: none;
 }
 .recent-posts-btn { background:#eafaf1; color:#000044; border: none; padding: 0.75rem; border-radius: 18px; font-weight:700; }
 .post-thumb { background-color:#dfefe6; height:180px; }
