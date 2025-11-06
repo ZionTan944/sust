@@ -136,7 +136,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import LogoutButton from '../components/LogoutButton.vue'
 import { useRouter } from 'vue-router'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -148,6 +148,7 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const stallsData = ref([])
+const overallStallsData = ref([])
 const loading = ref(true)
 const error = ref(null)
 
@@ -170,31 +171,47 @@ onMounted(async () => {
   isLoading.value++
   loading.value = true
   try {
-    const rankings = await getStallRankings()
-    // console.log('Raw rankings data:', rankings) // Debug log
-
-    stallsData.value = rankings.map((stall) => ({
-      id: stall.id, // Backend now returns proper IDs
-      name: stall.name,
-      location: stall.shorten_location,
-      usage: stall.count, // Number of times digestor was used
-      totalWeight: parseFloat(stall.total_weight) || 0, // Total weight in kg
-      icon: getStallIcon(stall.name),
-      iconBg: getIconBackground(stall.total_weight || 0),
-      grade: getGrade(stall.total_weight || 0),
-      // Add timestamp for potential future sorting
-      lastUpdated: new Date()
-    }))
-
-    // console.log('Processed stalls data:', stallsData.value) // Debug log
+    // Fetch overall data for progress bar (once, never changes)
+    overallStallsData.value = await getStallRankings('all')
+    
+    // Fetch filtered data for current period
+    await fetchFilteredData()
   } catch (err) {
     error.value = err.message
-    // console.error('Error fetching stall rankings:', err)
   } finally {
     isLoading.value--
     loading.value = false
   }
 })
+
+// Fetch filtered data based on selected period
+async function fetchFilteredData() {
+  try {
+    const rangeMap = {
+      'Daily': 'daily',
+      'Weekly': 'weekly',
+      'Monthly': 'monthly',
+      'Year': 'yearly'
+    }
+    
+    const range = rangeMap[sortBy.value] || 'weekly'
+    const rankings = await getStallRankings(range)
+
+    stallsData.value = rankings.map((stall) => ({
+      id: stall.id,
+      name: stall.name,
+      location: stall.shorten_location,
+      usage: stall.count,
+      totalWeight: parseFloat(stall.total_weight) || 0,
+      icon: getStallIcon(stall.name),
+      iconBg: getIconBackground(stall.total_weight || 0),
+      grade: getGrade(parseFloat(stall.total_weight) || 0, stall.count, sortBy.value),
+      lastUpdated: new Date()
+    }))
+  } catch (err) {
+    error.value = err.message
+  }
+}
 
 // Helper function to assign icons based on stall name
 function getStallIcon(stallName) {
@@ -221,47 +238,90 @@ function getIconBackground(totalWeight) {
   else return '#ff8a80'
 }
 
-// Helper function to get grade based on total weight
-function getGrade(totalWeight) {
-  if (totalWeight >= 5) return 'A'
-  else if (totalWeight >= 2) return 'B'
-  else return 'C'
+// Helper function to get grade based on total weight, usage frequency, and consistency
+function getGrade(totalWeight, usage, period) {
+  // Base score components (out of 100)
+  let score = 0
+  
+  // 1. Weight component (40 points max)
+  const weightThresholds = {
+    'Daily': { excellent: 2, good: 1, threshold: 0.5 },
+    'Weekly': { excellent: 10, good: 5, threshold: 2 },
+    'Monthly': { excellent: 30, good: 15, threshold: 5 },
+    'Year': { excellent: 300, good: 150, threshold: 50 }
+  }
+  
+  const thresholds = weightThresholds[period] || weightThresholds['Weekly']
+  
+  if (totalWeight >= thresholds.excellent) {
+    score += 40
+  } else if (totalWeight >= thresholds.good) {
+    score += 30
+  } else if (totalWeight >= thresholds.threshold) {
+    score += 20
+  } else if (totalWeight > 0) {
+    score += 10
+  }
+  
+  // 2. Usage frequency component (30 points max)
+  const usageThresholds = {
+    'Daily': { excellent: 3, good: 2 },
+    'Weekly': { excellent: 15, good: 8 },
+    'Monthly': { excellent: 40, good: 20 },
+    'Year': { excellent: 400, good: 200 }
+  }
+  
+  const usageT = usageThresholds[period] || usageThresholds['Weekly']
+  
+  if (usage >= usageT.excellent) {
+    score += 30
+  } else if (usage >= usageT.good) {
+    score += 20
+  } else if (usage > 0) {
+    score += 10
+  }
+  
+  // 3. Consistency component (30 points max)
+  const avgWeightPerUse = usage > 0 ? totalWeight / usage : 0
+  
+  if (avgWeightPerUse >= 0.8) {
+    score += 30
+  } else if (avgWeightPerUse >= 0.5) {
+    score += 20
+  } else if (avgWeightPerUse >= 0.3) {
+    score += 10
+  } else if (avgWeightPerUse > 0) {
+    score += 5
+  }
+  
+  // Convert score to letter grade
+  if (score >= 80) return 'A'
+  else if (score >= 60) return 'B'
+  else if (score >= 40) return 'C'
+  else if (score > 0) return 'D'
+  else return 'F'
 }
 
 // Implement proper sorting based on sortBy value
 const sortedStalls = computed(() => {
   if (loading.value || error.value || !stallsData.value.length) return []
-
-  const stalls = [...stallsData.value]
-
-  // For now, all sort options sort by total weight
-  // In the future, you could implement different sorting logic for each period
-  switch (sortBy.value) {
-    case 'Daily':
-      // Could filter data from last 24 hours and sort
-      return stalls.sort((a, b) => b.totalWeight - a.totalWeight)
-    case 'Weekly':
-      // Default backend sorting (already sorted by total weight)
-      return stalls.sort((a, b) => b.totalWeight - a.totalWeight)
-    case 'Monthly':
-      // Could filter data from last 30 days and sort
-      return stalls.sort((a, b) => b.totalWeight - a.totalWeight)
-    case 'Year':
-      // Could filter data from last year and sort
-      return stalls.sort((a, b) => b.totalWeight - a.totalWeight)
-    default:
-      return stalls.sort((a, b) => b.totalWeight - a.totalWeight)
-  }
+  
+  // Backend already sorts by total_weight DESC, count DESC
+  return [...stallsData.value]
 })
 
 const totalWeight = computed(() => {
-  if (loading.value || error.value) return 0
-  return stallsData.value.reduce((sum, s) => sum + s.totalWeight, 0)
+  // Calculate total from overall stalls data (never filtered)
+  if (!overallStallsData.value || overallStallsData.value.length === 0) return 0
+  
+  return overallStallsData.value.reduce((sum, s) => 
+    sum + (parseFloat(s.total_weight) || 0), 0
+  )
 })
 
 const totalPercent = computed(() => {
   const total = totalWeight.value
-  return Math.min(100, Math.round((total / 500) * 100)) // 500kg max target
+  return Math.min(100, Math.round((total / 500) * 100))
 })
 
 const topStall = computed(() => {
@@ -271,10 +331,21 @@ const topStall = computed(() => {
 })
 
 function handleLogout() {
-  // Use Pinia store to clear user state and redirect
   userStore.logout()
   router.push('/login')
 }
+
+// Watch for period changes and refetch filtered data
+watch(sortBy, async () => {
+  loading.value = true
+  try {
+    await fetchFilteredData()
+  } catch (err) {
+    error.value = err.message
+  } finally {
+    loading.value = false
+  }
+})
 </script>
 
 <style scoped>
@@ -348,6 +419,11 @@ function handleLogout() {
   border-radius: 50%;
   color: #fff;
   margin-right: 0;
+  flex-shrink: 0;
+}
+.leaderboard-item .text-end {
+  min-width: 75px;
+  flex-shrink: 0;
 }
 .grade-A {
   background: #00B888;
@@ -357,6 +433,13 @@ function handleLogout() {
   color: #222;
 }
 .grade-C {
+  background: #ff9800;
+  color: #fff;
+}
+.grade-D {
   background: #dc3545;
+}
+.grade-F {
+  background: #6c757d;
 }
 </style>

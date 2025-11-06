@@ -3,12 +3,33 @@ const router = express.Router();
 const db = require('../db');
 
 // GET /stall/ranking
-// get stall rankings based on digestor usage
+// get stall rankings based on digestor usage, with optional date filtering
 router.get('/ranking', async function (req, res, next) {
     try {
-        const rows = await db.query(
-            `SELECT s.id, s.name, s.shorten_location, COUNT(d.stallid) as count, COALESCE(SUM(CAST(d.weight AS DECIMAL(10,2))), 0) as total_weight FROM stall s LEFT JOIN digestor d ON s.id = d.stallid GROUP BY s.id, s.name, s.shorten_location ORDER BY total_weight DESC, count DESC;`, []
-        );
+        const range = req.query.range || 'all';
+        
+        // Map range to days
+        const daysMap = {
+            'daily': 1,
+            'weekly': 7,
+            'monthly': 30,
+            'yearly': 365
+        };
+        
+        let query;
+        let params = [];
+        
+        if (range === 'all' || !daysMap[range]) {
+            // No date filtering - get all data
+            query = `SELECT s.id, s.name, s.shorten_location, COUNT(d.stallid) as count, COALESCE(SUM(CAST(d.weight AS DECIMAL(10,2))), 0) as total_weight FROM stall s LEFT JOIN digestor d ON s.id = d.stallid GROUP BY s.id, s.name, s.shorten_location ORDER BY total_weight DESC, count DESC;`;
+        } else {
+            // Filter by date range in JOIN condition to preserve LEFT JOIN behavior
+            const days = daysMap[range];
+            query = `SELECT s.id, s.name, s.shorten_location, COUNT(d.stallid) as count, COALESCE(SUM(CAST(d.weight AS DECIMAL(10,2))), 0) as total_weight FROM stall s LEFT JOIN digestor d ON s.id = d.stallid AND d.date_created >= DATE_SUB(NOW(), INTERVAL ? DAY) GROUP BY s.id, s.name, s.shorten_location ORDER BY total_weight DESC, count DESC;`;
+            params = [days];
+        }
+        
+        const rows = await db.query(query, params);
         res.json(rows);
     } catch (err) {
         console.error(`Error in /stall/ranking`, err.message);

@@ -17,8 +17,13 @@ export async function getStallById(stallId) {
   return res.json();
 }
 
-export async function getStallRankings() {
-  const res = await fetch(`${API_URL}/stall/ranking`, {
+export async function getStallRankings(range = 'all') {
+  let url = `${API_URL}/stall/ranking`;
+  if (range && range !== 'all') {
+    url += `?range=${range.toLowerCase()}`;
+  }
+  
+  const res = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
