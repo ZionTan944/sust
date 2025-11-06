@@ -42,7 +42,7 @@ import { toasts, removeToast } from '@/stores/toast'
     display: flex;
     flex-direction: column;
     gap: 10px;
-    z-index: 9999;
+    z-index: 9990;
   }
 }
 </style>

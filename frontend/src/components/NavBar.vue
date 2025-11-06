@@ -41,4 +41,8 @@ nav {
   font-weight: 600;
   letter-spacing: 0.5px;
 }
+.nav-item.router-link-active .nav-box {
+  background-color: #00D09E;
+  border-radius: 25%;
+}
 </style>

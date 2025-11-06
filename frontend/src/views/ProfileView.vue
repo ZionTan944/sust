@@ -1,11 +1,17 @@
 <script setup>
-import { ref, onMounted, watch  } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user.js'
-import { getChallenges, getPointsByUser, sendChallengeCompletion, getPointByDuration } from '@/services/profile.js'
+import {
+  getChallenges,
+  getPointsByUser,
+  sendChallengeCompletion,
+  getPointByDuration,
+} from '@/services/profile.js'
 import LogoutButton from '../components/LogoutButton.vue'
 import { addToast } from '@/stores/toast.js'
-
+import { isLoading } from '@/stores/loading.js'
+import CameraPopup from '@/components/CameraPopup.vue'
 
 const loading = ref(true)
 const router = useRouter()
@@ -14,16 +20,20 @@ const challenges = ref([])
 const userData = ref([])
 const totalPercent = ref(0)
 const points = ref(0)
-const duration = ref("week")
-
+const duration = ref('week')
 
 onMounted(async () => {
+  isLoading.value++
   loading.value = true
-  challenges.value = await getChallenges(userStore.currentUser.id)
-  userData.value = await getPointsByUser(userStore.currentUser.id)
-  points.value = await getPointByDuration(userStore.currentUser.id, duration.value)
-  totalPercent.value = userData.value.points / 100
-  loading.value = false
+  try {
+    challenges.value = await getChallenges(userStore.currentUser.id)
+    userData.value = await getPointsByUser(userStore.currentUser.id)
+    points.value = await getPointByDuration(userStore.currentUser.id, duration.value)
+    totalPercent.value = userData.value.points / 100
+  } finally {
+    isLoading.value--
+    loading.value = false
+  }
 })
 
 function handleLogout() {
@@ -32,32 +42,40 @@ function handleLogout() {
   router.push('/login')
 }
 function getIcon() {
-    return ['fa-solid', 'utensils']
+  return ['fa-solid', 'utensils']
 }
 
-async function submitChallenge(challenge){
-  loading.value = true
-  try{
-  await sendChallengeCompletion(userStore.currentUser.id, challenge.id, "")
-  challenges.value = await getChallenges(userStore.currentUser.id)
-  userData.value = await getPointsByUser(userStore.currentUser.id)
-  points.value = await getPointByDuration(userStore.currentUser.id, duration.value)
-  totalPercent.value = userData.value.points / 100
-  }catch{
-    addToast('Challenge Submission Failed', 'Error')
-  }finally{
-  loading.value = false
-
-  }
+async function submitChallenge(challenge) {
+  // isLoading.value++
+  // loading.value = true
+  // try{
+  //   await sendChallengeCompletion(userStore.currentUser.id, challenge.id, "")
+  //   challenges.value = await getChallenges(userStore.currentUser.id)
+  //   userData.value = await getPointsByUser(userStore.currentUser.id)
+  //   points.value = await getPointByDuration(userStore.currentUser.id, duration.value)
+  //   totalPercent.value = userData.value.points / 100
+  // }catch{
+  //   addToast('Challenge Submission Failed', 'Error')
+  // }finally{
+  //   loading.value = false
+  //   isLoading.value--
+  // }
 }
 
 watch(duration, async (newVal) => {
-  points.value = await getPointByDuration(userStore.currentUser.id, newVal)
+  isLoading.value++
+  try {
+    points.value = await getPointByDuration(userStore.currentUser.id, newVal)
+  } finally {
+    isLoading.value--
+  }
 })
 </script>
 
 <template>
   <div class="operator-container">
+    <CameraPopup />
+
     <div class="container-fluid h-100">
       <div class="row h-100 justify-content-center align-items-stretch">
         <div class="d-flex flex-column flex-grow-1 p-0 min-vh-100">
@@ -78,7 +96,7 @@ watch(duration, async (newVal) => {
               </div>
               <div class="d-flex align-items-end mb-1">
                 <span class="fw-bold display-6 me-2">
-                  {{ userData.points }}<span class="fs-5"> Pts</span>
+                  {{ userData.points ? userData.points : '0' }}<span class="fs-5"> Pts</span>
                 </span>
               </div>
               <div class="progress custom-progress mb-1">
@@ -107,7 +125,9 @@ watch(duration, async (newVal) => {
                 </div>
                 <ol v-else class="list-unstyled leaderboard-list">
                   <!-- TODO -->
-                  <div class="mini-card p-1 m-1 d-flex flex-row align-items-center justify-content-between">
+                  <div
+                    class="mini-card p-1 m-1 d-flex flex-row align-items-center justify-content-between"
+                  >
                     <div class="mb-0">{{ points.points }} Total Points Earned</div>
                     <select class="form-select w-auto border-0" v-model="duration">
                       <option value="week">Last Week</option>
@@ -119,14 +139,25 @@ watch(duration, async (newVal) => {
                   <li
                     v-for="(challenge, i) in challenges"
                     :key="challenge.id"
-                    :class="['mb-3 leaderboard-item', !challenge.submitted ? '' : 'disabled-color']"
+                    :class="[
+                      'mb-3 leaderboard-item',
+                      !challenge.submitted ? '' : 'disabled-color',
+                    ]"
                   >
-                    <div v-if="!challenge.submitted" class="row align-items-center gx-2" @click="submitChallenge(challenge)">
+                    <div
+                      v-if="!(challenge.submitted)"
+                      class="row align-items-center gx-2"
+                      @click="submitChallenge(challenge)"
+                    >
                       <div class="col d-flex align-items-center">
-                        <div class="leaderboard-icon me-2 active-color">
+                        <div class="leaderboard-icon me-2 icon-progress-container active-color">
+                          <div
+                            class="icon-progress-fill"
+                            :style="{ height: (challenge.progress / challenge.count) * 100 + '%' }"
+                          ></div>
                           <font-awesome-icon
                             :icon="getIcon(challenge.title)"
-                            class="text-white fs-4"
+                            class="text-white fs-4 icon-overlay"
                           />
                         </div>
                         <div>
@@ -134,15 +165,20 @@ watch(duration, async (newVal) => {
                             {{ challenge.title }}
                           </div>
                           <div class="small text-primary">{{ challenge.description }}</div>
+                          <small v-if="challenge.progress != null">
+                            ({{ ((challenge.progress / challenge.count) * 100).toFixed(1) }}%)
+                          </small>
                         </div>
                       </div>
-                      <div class="col-auto d-flex align-items-center justify-content-end">
+                      <div
+                        class="col-auto d-flex align-items-center justify-content-end flex-column"
+                      >
                         <div class="fw-bold">{{ challenge.points }} pts</div>
                       </div>
                     </div>
-                    <div v-else class="row align-items-center gx-2 ">
+                    <div v-else class="row align-items-center gx-2">
                       <div class="col d-flex align-items-center">
-                        <div class="leaderboard-icon me-2 disabled-color">
+                        <div class="complete-color leaderboard-icon me-2 ">
                           <font-awesome-icon
                             :icon="getIcon(challenge.title)"
                             class="text-white fs-4"
@@ -170,10 +206,13 @@ watch(duration, async (newVal) => {
   </div>
 </template>
 <style scoped>
-.active-color{
-  background-color: #4db6ff;
+.complete-color{
+  background-color: #00b888;
 }
-.disabled-color{
+.active-color {
+  background-color: lightgray;
+}
+.disabled-color {
   background-color: lightgray;
 }
 .leaderboard-icon {
@@ -185,6 +224,7 @@ watch(duration, async (newVal) => {
   border: solid white 1px;
   border-radius: 50%;
   font-size: 1.5rem;
+  overflow: hidden;
 }
 .operator-container {
   background: linear-gradient(135deg, #00d09e 0%, #00b888 100%);
@@ -235,5 +275,23 @@ watch(duration, async (newVal) => {
   border-radius: 1.5rem;
   padding: 0.75rem 1rem;
   border: solid 1px black;
+}
+
+.icon-progress-container {
+  position: relative;
+}
+
+.icon-progress-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #00b888;
+  transition: height 0.3s ease;
+}
+
+.icon-overlay {
+  position: relative;
+  z-index: 1;
 }
 </style>

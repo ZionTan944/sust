@@ -14,14 +14,14 @@
           <!-- Logo rounded box -->
           <div class="d-flex justify-content-center mb-3">
             <div class="logo-box d-flex align-items-center justify-content-center">
-              <img :src="stall.logo || defaultLogo" alt="logo" class="img-fluid" />
+              <img :src="stall.logo || defaultLogo" alt="logo" class="logo-img" />
             </div>
           </div>
 
           <!-- Combined Info + Posts card -->
           <div class="operator-card card mx-auto" style="margin-bottom:0; min-height:70vh; display:flex; flex-direction:column;">
             <div class="card-body flex-grow-1 d-flex flex-column " style="overflow-y:auto; padding-bottom: 4rem;">
-              
+
               <!-- Loading state -->
               <div v-if="loading" class="text-center py-4">
                 <div class="spinner-border text-success" role="status">
@@ -86,6 +86,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import BackButton from '../components/BackButton.vue'
 import { getStallById } from '../services/stall.js'
+import { addToast } from '@/stores/toast'
+import { isLoading } from '@/stores/loading'
 
 const route = useRoute()
 const id = Number(route.params.id)
@@ -96,16 +98,26 @@ const error = ref(null)
 
 // Fetch stall data from API
 onMounted(async () => {
+  isLoading.value++
+  loading.value = true
   try {
     stallData.value = await getStallById(id)
   } catch (err) {
     error.value = err.message
-    console.error('Error fetching stall data:', err)
+    // console.error('Error fetching stall data:', err)
+    addToast("Error fetching stall data. Try again later", "Error")
   } finally {
+    isLoading.value--
     loading.value = false
   }
 })
 
+function toB64(buffer){
+  const base64 = btoa(
+      new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+    )
+  return `data:image/png;base64,${base64}`
+}
 // Transform API data to match component expectations
 const stall = computed(() => {
   if (!stallData.value) {
@@ -124,7 +136,7 @@ const stall = computed(() => {
     id: stallData.value.id,
     name: stallData.value.name || 'Unknown Stall',
     tagline: '', // Not in database, could be derived from description
-    logo: stallData.value.image || '',
+    logo: toB64(stallData.value.image.data )|| '',
     locationFull: stallData.value.location || stallData.value.shorten_location || '',
     contact: stallData.value.contact || 'Contact not available',
     hours: stallData.value.opening_hours || 'Hours not available',
@@ -137,12 +149,17 @@ const defaultLogo = 'https://placehold.co/180x100?text=Logo'
 
 <style scoped>
 .operator-container { background: linear-gradient(135deg, #00D09E 0%, #00B888 100%); min-height:100vh; }
-.logo-box { width:200px; height:140px; background:#fff; border-radius:26px; }
-.operator-card { 
-  background: #f6fff8; 
-  border-radius: 30px 30px 0 0; 
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.1); 
-  border: none; 
+.logo-box { width:200px; height:140px; background:#fff; border-radius:26px; padding:0.5px }
+.operator-card {
+  background: #f6fff8;
+  border-radius: 30px 30px 0 0;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.1);
+  border: none;
+}
+.logo-img{
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
 }
 .recent-posts-btn { background:#eafaf1; color:#000044; border: none; padding: 0.75rem; border-radius: 18px; font-weight:700; }
 .post-thumb { background-color:#dfefe6; height:180px; }

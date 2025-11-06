@@ -142,6 +142,7 @@ import { useRouter } from 'vue-router'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { getStallRankings } from '../services/stall.js'
 import { useUserStore } from '../stores/user.js'
+import { isLoading } from '@/stores/loading'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -166,9 +167,11 @@ const currentDate = computed(() => {
 
 // Fetch stall rankings from backend
 onMounted(async () => {
+  isLoading.value++
+  loading.value = true
   try {
     const rankings = await getStallRankings()
-    console.log('Raw rankings data:', rankings) // Debug log
+    // console.log('Raw rankings data:', rankings) // Debug log
 
     stallsData.value = rankings.map((stall) => ({
       id: stall.id, // Backend now returns proper IDs
@@ -183,11 +186,12 @@ onMounted(async () => {
       lastUpdated: new Date()
     }))
 
-    console.log('Processed stalls data:', stallsData.value) // Debug log
+    // console.log('Processed stalls data:', stallsData.value) // Debug log
   } catch (err) {
     error.value = err.message
-    console.error('Error fetching stall rankings:', err)
+    // console.error('Error fetching stall rankings:', err)
   } finally {
+    isLoading.value--
     loading.value = false
   }
 })

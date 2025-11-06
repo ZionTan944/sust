@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user.js'
 import { getAllRanking, getRankingByFaculty } from '@/services/student.js'
 import LogoutButton from '../components/LogoutButton.vue'
+import { isLoading } from '@/stores/loading.js'
 
 const loading = ref(true)
 const router = useRouter()
@@ -15,14 +16,19 @@ const topData = ref([])
 const rankingData = ref([])
 
 onMounted(async () => {
+  isLoading.value++
   loading.value = true
-  topData.value = await getAllRanking()
-  if (sortBy.value == 'ALL') {
-    rankingData.value = await getAllRanking()
-  } else {
-    rankingData.value = await getRankingByFaculty(sortBy.value)
-  }
+  try{
+    topData.value = await getAllRanking()
+    if (sortBy.value == 'ALL') {
+      rankingData.value = await getAllRanking()
+    } else {
+      rankingData.value = await getRankingByFaculty(sortBy.value)
+    }
+  }finally{
   loading.value = false
+  isLoading.value--
+  }
 })
 
 const currentDate = computed(() => {
@@ -40,14 +46,19 @@ function handleLogout() {
   router.push('/login')
 }
 watch(sortBy, async (newSortBy, oldSortBy) => {
-  topData.value = await getAllRanking()
-  if (newSortBy == 'ALL') {
-    rankingData.value = await getAllRanking()
-  } else {
-    rankingData.value = await getRankingByFaculty(newSortBy)
+  isLoading.value++
+  loading.value=true
+  try {
+    topData.value = await getAllRanking()
+    if (newSortBy == 'ALL') {
+      rankingData.value = await getAllRanking()
+    } else {
+      rankingData.value = await getRankingByFaculty(newSortBy)
+    }
+  }finally{
+    isLoading.value--
+    loading.value = false
   }
-  loading.value = false
-
 })
 </script>
 
