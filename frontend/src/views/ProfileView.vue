@@ -141,11 +141,11 @@ watch(duration, async (newVal) => {
                     :key="challenge.id"
                     :class="[
                       'mb-3 leaderboard-item',
-                      !(challenge.progress / challenge.count >= 1) ? '' : 'disabled-color',
+                      !challenge.submitted ? '' : 'disabled-color',
                     ]"
                   >
                     <div
-                      v-if="!(challenge.progress / challenge.count >= 1)"
+                      v-if="!(challenge.submitted)"
                       class="row align-items-center gx-2"
                       @click="submitChallenge(challenge)"
                     >
