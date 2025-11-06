@@ -14,7 +14,7 @@
   position:fixed;
   right:10px;
   bottom:60px;
-  z-index:9999;
+  z-index:9980;
 }
 
 .icon-card:hover{

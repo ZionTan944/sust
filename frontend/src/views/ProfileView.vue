@@ -5,6 +5,7 @@ import { useUserStore } from '../stores/user.js'
 import { getChallenges, getPointsByUser, sendChallengeCompletion, getPointByDuration } from '@/services/profile.js'
 import LogoutButton from '../components/LogoutButton.vue'
 import { addToast } from '@/stores/toast.js'
+import { isLoading } from '@/stores/loading.js'
 
 
 const loading = ref(true)
@@ -18,12 +19,17 @@ const duration = ref("week")
 
 
 onMounted(async () => {
+  isLoading.value++
   loading.value = true
-  challenges.value = await getChallenges(userStore.currentUser.id)
-  userData.value = await getPointsByUser(userStore.currentUser.id)
-  points.value = await getPointByDuration(userStore.currentUser.id, duration.value)
-  totalPercent.value = userData.value.points / 100
-  loading.value = false
+  try{
+    challenges.value = await getChallenges(userStore.currentUser.id)
+    userData.value = await getPointsByUser(userStore.currentUser.id)
+    points.value = await getPointByDuration(userStore.currentUser.id, duration.value)
+    totalPercent.value = userData.value.points / 100
+  }finally{
+    isLoading.value--
+    loading.value = false
+  }
 })
 
 function handleLogout() {
@@ -36,23 +42,30 @@ function getIcon() {
 }
 
 async function submitChallenge(challenge){
+  isLoading.value++
   loading.value = true
   try{
-  await sendChallengeCompletion(userStore.currentUser.id, challenge.id, "")
-  challenges.value = await getChallenges(userStore.currentUser.id)
-  userData.value = await getPointsByUser(userStore.currentUser.id)
-  points.value = await getPointByDuration(userStore.currentUser.id, duration.value)
-  totalPercent.value = userData.value.points / 100
+    await sendChallengeCompletion(userStore.currentUser.id, challenge.id, "")
+    challenges.value = await getChallenges(userStore.currentUser.id)
+    userData.value = await getPointsByUser(userStore.currentUser.id)
+    points.value = await getPointByDuration(userStore.currentUser.id, duration.value)
+    totalPercent.value = userData.value.points / 100
   }catch{
     addToast('Challenge Submission Failed', 'Error')
   }finally{
-  loading.value = false
+    loading.value = false
+    isLoading.value--
 
   }
 }
 
 watch(duration, async (newVal) => {
-  points.value = await getPointByDuration(userStore.currentUser.id, newVal)
+  isLoading.value++
+  try{
+    points.value = await getPointByDuration(userStore.currentUser.id, newVal)
+  }finally{
+    isLoading.value--
+  }
 })
 </script>
 

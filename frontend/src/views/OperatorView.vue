@@ -144,6 +144,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { getStallRankings } from '../services/stall.js'
 import { useUserStore } from '../stores/user.js'
 import CameraPopup from '@/components/CameraPopup.vue'
+import { isLoading } from '@/stores/loading'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -168,6 +169,8 @@ const currentDate = computed(() => {
 
 // Fetch stall rankings from backend
 onMounted(async () => {
+  isLoading.value++
+  loading.value = true
   try {
     const rankings = await getStallRankings()
     // console.log('Raw rankings data:', rankings) // Debug log
@@ -190,6 +193,7 @@ onMounted(async () => {
     error.value = err.message
     // console.error('Error fetching stall rankings:', err)
   } finally {
+    isLoading.value--
     loading.value = false
   }
 })

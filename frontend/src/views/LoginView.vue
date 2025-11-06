@@ -83,6 +83,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user.js'
 import { addToast } from '@/stores/toast.js'
+import { isLoading } from '@/stores/loading.js'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -98,7 +99,7 @@ const togglePassword = () => {
 const handleLogin = async () => {
   // Clear any previous errors
   userStore.clearError()
-
+  isLoading.value++
   try {
     const result = await userStore.login(email.value, password.value)
 
@@ -116,6 +117,8 @@ const handleLogin = async () => {
     // console.error('Login error:', error)
     addToast("Login Failed. Try again later", "Error")
 
+  }finally{
+    isLoading.value--
   }
 }
 </script>

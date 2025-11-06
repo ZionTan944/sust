@@ -7,6 +7,7 @@ import { getPointsByUser } from '@/services/profile.js'
 import { addToast } from '@/stores/toast.js'
 
 import LogoutButton from '../components/LogoutButton.vue'
+import { isLoading } from '@/stores/loading.js'
 
 const loading = ref(true)
 const router = useRouter()
@@ -17,6 +18,7 @@ const totalPercent = ref(0)
 const filter = ref('All')
 
 async function submitReward(rewardId) {
+  isLoading.value++
   loading.value = true
   try {
     await claimReward(rewardId, userStore.currentUser.id)
@@ -35,26 +37,28 @@ async function submitReward(rewardId) {
 
   } finally {
     loading.value = false
+    isLoading.value--
   }
 }
 
 onMounted(async () => {
+  isLoading.value++
   loading.value = true
   try {
-  if (filter.value == 'All') {
-    rewards.value = await getAllRewards(userStore.currentUser.id)
-    userData.value = await getPointsByUser(userStore.currentUser.id)
-    totalPercent.value = userData.value.points / 100
-  } else {
-    rewards.value = await getValidRewards(userStore.currentUser.id)
-    userData.value = await getPointsByUser(userStore.currentUser.id)
-    totalPercent.value = userData.value.points / 100
-  }}
-  catch (e){
+    if (filter.value == 'All') {
+      rewards.value = await getAllRewards(userStore.currentUser.id)
+      userData.value = await getPointsByUser(userStore.currentUser.id)
+      totalPercent.value = userData.value.points / 100
+    } else {
+      rewards.value = await getValidRewards(userStore.currentUser.id)
+      userData.value = await getPointsByUser(userStore.currentUser.id)
+      totalPercent.value = userData.value.points / 100
+    }
+  }catch (e){
     addToast('Loading of Page Failed', 'Error')
-  }
-  finally{
+  }finally{
     loading.value = false
+    isLoading.value--
 
   }
 })
@@ -66,14 +70,20 @@ function handleLogout() {
 }
 
 watch(filter, async (newVal) => {
-  filter.value - newVal
-  if (filter.value == 'All') {
-    rewards.value = await getAllRewards(userStore.currentUser.id)
-    loading.value = false
-  } else {
-    rewards.value = await getValidRewards(userStore.currentUser.id)
+  loading.value = true
+  isLoading.value++
+  try{
+    filter.value - newVal
+    if (filter.value == 'All') {
+      rewards.value = await getAllRewards(userStore.currentUser.id)
+    } else {
+      rewards.value = await getValidRewards(userStore.currentUser.id)
+    }
+  }finally{
+    isLoading.value--
     loading.value = false
   }
+
 })
 </script>
 

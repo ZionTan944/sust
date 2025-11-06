@@ -4,6 +4,7 @@ import {ref, onMounted, onUnmounted} from "vue"
 import {useRouter} from 'vue-router'
 import { useUserStore } from "@/stores/user"
 import { addToast } from "@/stores/toast"
+import { isLoading } from "@/stores/loading"
 
 const userStore = useUserStore()
 const router = useRouter()
@@ -23,11 +24,17 @@ function capturePhoto(){
 }
 
 async function submitPhoto(){
-  const res = await sendPhoto(userStore.currentUser.id, photoBlob.value)
-  if("challengesCompleted" in res){
-    router.push("/operator")
-    addToast("Photo successfully submited. Purchase tagged to " + res.stall, "Success")
+  isLoading.value++
+  try{
+    const res = await sendPhoto(userStore.currentUser.id, photoBlob.value)
+    if("challengesCompleted" in res){
+      router.push("/operator")
+      addToast("Photo successfully submited. Purchase tagged to " + res.stall, "Success")
+    }
+  }finally{
+    isLoading.value--
   }
+
 }
 
 const video = ref(null)

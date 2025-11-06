@@ -87,6 +87,7 @@ import { useRoute } from 'vue-router'
 import BackButton from '../components/BackButton.vue'
 import { getStallById } from '../services/stall.js'
 import { addToast } from '@/stores/toast'
+import { isLoading } from '@/stores/loading'
 
 const route = useRoute()
 const id = Number(route.params.id)
@@ -97,6 +98,8 @@ const error = ref(null)
 
 // Fetch stall data from API
 onMounted(async () => {
+  isLoading.value++
+  loading.value = true
   try {
     stallData.value = await getStallById(id)
   } catch (err) {
@@ -104,6 +107,7 @@ onMounted(async () => {
     // console.error('Error fetching stall data:', err)
     addToast("Error fetching stall dat. Try again later", "Error")
   } finally {
+    isLoading.value--
     loading.value = false
   }
 })
