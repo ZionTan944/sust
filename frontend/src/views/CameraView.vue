@@ -28,7 +28,7 @@ async function submitPhoto(){
   try{
     const res = await sendPhoto(userStore.currentUser.id, photoBlob.value)
     if("challengesCompleted" in res){
-      router.push("/operator")
+      router.push("/profile")
       addToast("Photo successfully submited. Purchase tagged to " + res.stall, "Success")
     }
   }finally{

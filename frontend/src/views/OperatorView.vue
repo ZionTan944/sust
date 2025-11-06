@@ -1,6 +1,5 @@
 <template>
   <div class="operator-container">
-    <CameraPopup/>
     <div class="container-fluid h-100">
       <div class="row h-100 justify-content-center align-items-stretch">
         <div class="d-flex flex-column flex-grow-1 p-0 min-vh-100">
@@ -143,7 +142,6 @@ import { useRouter } from 'vue-router'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { getStallRankings } from '../services/stall.js'
 import { useUserStore } from '../stores/user.js'
-import CameraPopup from '@/components/CameraPopup.vue'
 import { isLoading } from '@/stores/loading'
 
 const router = useRouter()
