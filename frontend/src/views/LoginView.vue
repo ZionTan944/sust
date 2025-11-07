@@ -16,10 +16,10 @@
                   <label class="form-label fw-semibold fs-5">Username Or Email</label>
                   <div class="input-container">
                     <input
-                      type="email"
+                      type="text"
                       class="form-control custom-input fs-5"
                       v-model="email"
-                      placeholder="example@example.com"
+                      placeholder="username or example@example.com"
                       required
                     />
                   </div>
