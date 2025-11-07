@@ -21,7 +21,7 @@ async function submitReward(rewardId) {
   isLoading.value++
   loading.value = true
   try {
-    await claimReward(rewardId, userStore.currentUser.id)
+    await claimReward(userStore.currentUser.id, rewardId)
     if (filter.value == 'All') {
       rewards.value = await getAllRewards(userStore.currentUser.id)
       userData.value = await getPointsByUser(userStore.currentUser.id)
