@@ -3,22 +3,25 @@ const router = express.Router();
 const db = require('../db');
 
 // POST /auth/login
-// body: { email, password }
+// body: { email, password }  OR { username, password }
+// Accept either email or username for login (minimal change: we reuse the same request body)
 router.post('/login', async (req, res, next) => {
   try {
     const { email, password } = req.body || {};
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Missing email or password' });
+    const identifier = email; // frontend sends value in `email` field (could be email or username)
+
+    if (!identifier || !password) {
+      return res.status(400).json({ error: 'Missing identifier or password' });
     }
 
-    const rows = await db.query('SELECT id, username, email, faculty, password FROM user WHERE email = ? LIMIT 1', [email]);
+    // Try to find user by email OR username (allow login by either)
+    const rows = await db.query('SELECT id, username, email, faculty, password FROM user WHERE email = ? OR username = ? LIMIT 1', [identifier, identifier]);
     if (!rows || rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const user = rows[0];
 
-    
     if (user.password !== password) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
