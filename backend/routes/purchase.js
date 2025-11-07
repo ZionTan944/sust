@@ -75,7 +75,7 @@ router.post('/:userid', async function (req, res, next) {
 
         // check if any challenges completed THAT does not already exist in challenge completion
         rows = await db.query(
-            `SELECT c.id, count(c.id) as progress, c.count, c.points FROM sust.challenge c LEFT JOIN sust.purchase p on (c.stallid = p.stallid or c.stallid is null) and p.date_created >= c.date_created and userid = ? and active = 1 WHERE NOT EXISTS (SELECT 1 FROM sust.challenge_completion cc WHERE cc.challengeid = c.id AND cc.userid = ?) group by c.id having progress >= c.count;`, [userid, userid]
+            `SELECT c.id, count(p.id) as progress, c.count, c.points FROM sust.challenge c LEFT JOIN sust.purchase p on (c.stallid = p.stallid or c.stallid is null) and p.date_created >= c.date_created and userid = ? and active = 1 WHERE NOT EXISTS (SELECT 1 FROM sust.challenge_completion cc WHERE cc.challengeid = c.id AND cc.userid = ?) group by p.id, c.id having progress >= c.count;`, [userid, userid]
         );
 
         for (i = 0; i < rows.length; i++) {
