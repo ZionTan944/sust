@@ -42,7 +42,7 @@ const canvas = ref(null)
 let stream = null
 onMounted(async () => {
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: true })
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
     video.value.srcObject = stream
   } catch (err) {
     alert('Cannot access webcam: ' + err)
