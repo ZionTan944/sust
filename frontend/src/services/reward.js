@@ -1,3 +1,5 @@
+import { addToast } from "@/stores/toast";
+
 export async function getAllRewards(userId) {
   const res = await fetch(import.meta.env.VITE_API_URL+`rewards/all/`+userId, {
     method: 'GET',
@@ -48,6 +50,6 @@ export async function claimReward(userId, rewardId) {
     const data = await res.json().catch(() => ({}));
     throw new Error(data.error || 'Failed to claim reward');
   }
-
+  addToast("Reward has been claimed!")
   return res.json();
 }

@@ -25,14 +25,17 @@ function capturePhoto(){
 
 async function submitPhoto(){
   isLoading.value++
+  let res = null
   try{
-    const res = await sendPhoto(userStore.currentUser.id, photoBlob.value)
+    res = await sendPhoto(userStore.currentUser.id, photoBlob.value)
     if("challengesCompleted" in res){
       router.push("/profile")
-      addToast("Photo successfully submited. Purchase tagged to " + res.stall, "Success")
     }
   }finally{
     isLoading.value--
+      if("challengesCompleted" in res){
+      addToast("Photo successfully submited. Purchase tagged to " + res.stall, "Success")
+    }
   }
 
 }
