@@ -28,7 +28,10 @@ async function submitPhoto(){
   let res = null
   try{
     res = await sendPhoto(userStore.currentUser.id, photoBlob.value)
-    if("challengesCompleted" in res){
+    if ("error" in res){
+      addToast("Photo submitted too recently. Try again tomorrow", "Error")
+      router.push("/profile")
+    }else if("challengesCompleted" in res){
       router.push("/profile")
     }
   }finally{
