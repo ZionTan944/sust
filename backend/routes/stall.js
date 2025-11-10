@@ -54,15 +54,39 @@ router.get('/:stallid', async function (req, res, next) {
 });
 
 // GET /stall/:stallid/images
-// get individual stall details
+// get images for a stall. Supports optional ?limit= and ?offset= for pagination.
 router.get('/:stallid/images', async function (req, res, next) {
-    stallid = req.params.stallid;
+    const stallid = req.params.stallid;
     try {
-        const rows = await db.query(
-            `SELECT image FROM sust.purchase where stallid = ? and image is not null limit 6;`, [stallid]
-        );
+        // allow callers to request pagination. If not provided, return all images for the stall.
+        // Pagination: support either (limit & offset) OR (page & pageSize)
+        let limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
+        let offset = req.query.offset ? parseInt(req.query.offset, 10) : null;
+        const page = req.query.page ? parseInt(req.query.page, 10) : null;
+        const pageSize = req.query.pageSize ? parseInt(req.query.pageSize, 10) : null;
 
-        res.json(rows[0])
+        // If page is provided prefer page-based pagination
+        if (Number.isInteger(page) && page > 0) {
+            const size = Number.isInteger(pageSize) && pageSize > 0 ? pageSize : 12;
+            limit = size;
+            offset = (page - 1) * size;
+        }
+
+        // Build query. Use a single parameter for stallid and interpolate
+        // numeric LIMIT/OFFSET directly after validating they're integers to
+        // avoid prepared-statement argument mismatches in mysql2.
+        let query = `SELECT id, image FROM sust.purchase WHERE stallid = ? AND image IS NOT NULL ORDER BY id DESC`;
+        const params = [stallid];
+
+        if (Number.isInteger(limit) && limit > 0) {
+            query += ` LIMIT ${limit}`;
+            if (Number.isInteger(offset) && offset >= 0) {
+                query += ` OFFSET ${offset}`;
+            }
+        }
+
+        const rows = await db.query(query, params);
+        res.json(rows);
     } catch (err) {
         console.error(`Error in /stall/:stallid/images`, err.message);
         next(err);
