@@ -107,7 +107,7 @@ router.post('/:userid', async function (req, res, next) {
         rows = await db.query(
             `SELECT p.id, s.name FROM sust.purchase p left join stall s on p.stallid = s.id where p.date_created >= DATE_SUB(NOW(), INTERVAL 3 hour) and s.name = ? and p.userid = ?;`, [stallName, userid]
         );
-        console.log(rows);
+
         if(rows.length >= 1){
             return res.status(403).json({ error: 'Photo submitted too recently' });
         }
