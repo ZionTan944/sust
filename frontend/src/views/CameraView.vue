@@ -34,7 +34,7 @@ async function submitPhoto(){
   }finally{
     isLoading.value--
       if("challengesCompleted" in res){
-      addToast("Photo successfully submited. Purchase tagged to " + res.stall, "Success")
+      addToast("Photo successfully submitted. Purchase tagged to " + res.stall, "Success")
     }
   }
 
