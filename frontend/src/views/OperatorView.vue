@@ -31,7 +31,7 @@
               </div>
               <div class="mt-2 text-muted small">
                 <font-awesome-icon icon="fa-solid fa-trophy" class="me-1 text-warning" />
-                Last Week's Top: <span class="fw-bold">{{ topStall }}</span>
+                {{ periodTopLabel }}: <span class="fw-bold">{{ topStall }}</span>
               </div>
             </div>
           </div>
@@ -48,7 +48,7 @@
 
               <!-- Leaderboard -->
               <div>
-                <div class="fw-bold mb-2">Week 5 Leaderboard</div>
+                <div class="fw-bold mb-2">{{ leaderboardTitle }}</div>
 
                 <!-- Loading state -->
                 <div v-if="loading" class="text-center py-4">
@@ -328,6 +328,27 @@ const topStall = computed(() => {
   if (loading.value || error.value || stallsData.value.length === 0) return 'No data'
   const sorted = sortedStalls.value
   return sorted[0]?.name || 'No data'
+})
+
+// Dynamic labels based on selected period
+const periodTopLabel = computed(() => {
+  const labels = {
+    'Daily': "Today's Top",
+    'Weekly': "This Week's Top",
+    'Monthly': "This Month's Top",
+    'Year': "This Year's Top"
+  }
+  return labels[sortBy.value] || "This Week's Top"
+})
+
+const leaderboardTitle = computed(() => {
+  const titles = {
+    'Daily': 'Daily Leaderboard',
+    'Weekly': 'Weekly Leaderboard',
+    'Monthly': 'Monthly Leaderboard',
+    'Year': 'Yearly Leaderboard'
+  }
+  return titles[sortBy.value] || 'Weekly Leaderboard'
 })
 
 function handleLogout() {
