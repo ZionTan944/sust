@@ -11,7 +11,7 @@ If you need to populate the local MySQL database for development, create a `.env
 
 1. cd backend
 2. npm install
-3. npm run db:import
+3. node ./scripts/import-sql.js
 
 The `db:import` script runs `scripts/import-sql.js`, which uses your `.env` values to create the `is463backend` database and import `tablesNdata.sql`.
 
