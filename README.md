@@ -1,9 +1,19 @@
-# sust
+# Campush Crush
+
+## Frontend
+1. `cd frontend`
+2. `npm install`
+3. `npm run dev`
+
+### Testing of hosted website
+Link to Site: https://sust-fe.onrender.com/
+Username: James
+Password: test
 
 ## Backend
-1. cd backend
-2. npm install
-2. node app.js
+1. `cd backend`
+2. `npm install`
+2. `node app.js`
 
 ### Database import (dev only)
 
